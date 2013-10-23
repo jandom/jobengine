@@ -10,6 +10,7 @@ from jobengine.clusters import Jade
 from jobengine.configuration import engine_file
 
 import argparse
+import subprocess
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -54,7 +55,7 @@ def process_fetch():
         print("Checking")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
         for job in jobs :
-            jade.pull(shell, job)   
+            print(jade.pull(shell, job))   
             print(job.status, job.id, job.workdir)
         break
         #time.sleep(60*60) # 60 minutes

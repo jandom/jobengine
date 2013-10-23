@@ -3,6 +3,7 @@ from xml.dom import minidom
 # paramiko
 from paramiko import SSHClient
 from scp import SCPClient
+from sympy.utilities.runtests import subprocess
 
 def get_cluster(name):
     return clusters[name]
@@ -84,19 +85,18 @@ sleep 10
     def parse_qsub(self, result):
         assert len(result.output.split(".")) == 6
         return int(result.output.split(".")[0])
+
     def pull(self, shell, job):
         """
         Pull the data from remote workdir into the local workdir using the
         scp command.
         """
-        ssh = SSHClient()
-        ssh.load_system_host_keys()
-        ssh.connect(self.hostname, username=self.username)
-        scp = SCPClient(ssh.get_transport())
-        scp.get(job.remote_workdir+"/*.xtc", job.workdir, recursive=True)
-        scp.get(job.remote_workdir+"/*.log", job.workdir, recursive=True)
-        #print(job.remote_workdir+"/*", job.workdir)
+        cmd = "rsync -v --progress %s@%s:%s/* %s/  --include='*.xtc' --include='*.log' --exclude='*.*' " \
+                             % (self.username, self.hostname, job.remote_workdir,  job.workdir)  
+        print cmd
+        return subprocess.call(cmd, shell=True)
         
+          
     def get_status(self, shell, job):
         if not job.cluster_id: return None
         cmd = self.status_command
