@@ -5,7 +5,7 @@ import time
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine 
 # jobengire
-from jobengine.core import Job
+from jobengine.core import Job, test_workdir
 from jobengine.clusters import Jade
 from jobengine.configuration import engine_file
 
@@ -60,6 +60,20 @@ def process_fetch():
         break
         #time.sleep(60*60) # 60 minutes
 
+def process_test():
+    
+    engine = create_engine(engine_file)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    
+    while True:
+        print("Testing")
+        jobs = [job for job in session.query(Job).order_by(Job.id)]
+        for job in jobs :
+            print job.local_workdir, test_workdir(job.workdir)
+        break
+        #time.sleep(60*60) # 60 minutes
+
 from multiprocessing import Process    
 
 def main():
@@ -69,6 +83,8 @@ def main():
         process_resubmit()
     if args.action == "fetch":
         process_fetch()
+    if args.action == "test":
+        process_test()
     #Process(target=process_resubmit).start()
     #Process(target=process_fetch).start()    
     

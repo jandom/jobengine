@@ -13,7 +13,7 @@ from scp import SCPClient
 
 # SQAlchemy-related
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Float
 Base = declarative_base()
 
 class Job(Base):
@@ -24,12 +24,13 @@ class Job(Base):
      uuid = Column(String)
      workdir = Column(String)
      remote_workdir = Column(String)
+     local_workdir = Column(String)
      cluster_name = Column(String)
      cluster_id = Column(Integer)
      
      status = Column(String)
 
-     def __init__(self, name, uuid, workdir, remote_workdir, cluster_name, cluster_id):
+     def __init__(self, name, uuid, workdir, local_workdir, remote_workdir, cluster_name, cluster_id,):
          self.name = name
          self.uuid = uuid
          self.workdir = workdir
@@ -37,6 +38,9 @@ class Job(Base):
          self.cluster_name = cluster_name
          self.cluster_id = cluster_id
          self.status = "U"
+         self.local_workdir = local_workdir
+         self.current_chemtime = 0.0
+         self.target_chemtime = 0.01
          
 
      def __repr__(self):
@@ -58,6 +62,34 @@ def stat(host, jobid=None):
     
 def cancel(host):
     pass
+
+from gromacs.fileformats import MDP
+from MDAnalysis import Universe
+from collections import Counter
+import numpy as np
+def test_workdir(workdir):
+    return test_workdir_contents(os.path.join(workdir, "grompp.mdp"),
+                                 os.path.join(workdir, "conf.gro"),
+                                 os.path.join(workdir, "traj.xtc"),)
+
+
+def test_workdir_contents(mdp_file="grompp.mdp", conf_file="conf.gro", traj_file="workdir/traj.xtc"):
+    mdp = MDP(mdp_file)
+    
+    target_time = int(mdp["nsteps"].split()[0]) * mdp["dt"]  # target chemical time in ps
+    u = Universe(conf_file, traj_file)
+    times = [f.time for f in u.trajectory]
+    
+    # Check if there are no double frames
+    c = Counter(times)
+    c.most_common(3)
+    assert(c.most_common(1)[0][1]  == 1)
+    
+    # Check if no frames are missing
+    desired_times = list(np.arange(0.0, max(times)+mdp["dt"]*mdp["nstxtcout"], mdp["dt"]*mdp["nstxtcout"]))
+    assert(len(times) == len(desired_times))
+    
+    return max(times), target_time
 
 def submit(tpr, cluster):
     assert os.path.isfile(tpr)
@@ -93,7 +125,12 @@ def create(tpr, cluster, job_name="workdir"):
     workdir = "%s/%s" % (configuration.lockers, id0)
     os.mkdir(workdir)
     os.symlink(workdir, "workdir")
+    local_dir = os.path.dirname(tpr) # FIXME this should be stored
+    gro = os.path.join(local_dir, "conf.gro")
+    mdp = os.path.join(local_dir, "grompp.mdp")
     shutil.copy(tpr, workdir)
+    shutil.copy(gro, workdir)
+    shutil.copy(mdp, workdir)
     open("%s/submit.sh" % workdir,"w").write(cluster.script % job_name)
     
     ssh = SSHClient()
@@ -108,6 +145,6 @@ def create(tpr, cluster, job_name="workdir"):
         remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
         #result = shell.run(["qsub","%s/.lockers/%s/submit.sh" % (cluster.path, id0)], cwd=remote_workdir)
         #cluster_id = cluster.parse_qsub(result)
-        j = Job(job_name, id0, workdir, remote_workdir, cluster.name, None)
+        j = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, None)
     return j        
         
