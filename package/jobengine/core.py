@@ -44,7 +44,7 @@ class Job(Base):
          
 
      def __repr__(self):
-        return "<Job Id:%d UUID:%s\nWorkdir:%s\nRemote workdir:%s\n'%s'>" % (self.id if self.id else 0, self.uuid, self.workdir, self.remote_workdir, self.name)
+        return "<Job Id:%d UUID:%s\nWorkdir:%s\nRemote workdir:%s\n'%s Cluster: %s'>" % (self.id if self.id else 0, self.uuid, self.workdir, self.remote_workdir, self.name, self.cluster_name)
 
 def connect(host):
     

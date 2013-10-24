@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine 
 # jobengire
 from jobengine.core import Job, test_workdir
-from jobengine.clusters import Jade
+from jobengine.clusters import Clusters
 from jobengine.configuration import engine_file
 
 import argparse
@@ -23,19 +23,19 @@ def process_resubmit():
     Session = sessionmaker(bind=engine)
     session = Session()
     
-    jade = Jade()
-    shell = jade.connect()
+    clusters = Clusters()
     
     while True:
         print("Checking")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
         for job in jobs :
+            cluster, shell = clusters.get_cluster(job.cluster_name)
             if job.status == "S": continue
-            status = jade.get_status(shell, job)
+            status = cluster.get_status(shell, job)
             job.status = status 
             print("Before:",status, job.id)
             if status == "C":
-                job = jade.submit(shell, job)
+                job = cluster.submit(shell, job)
                 print("After:", job.status, job.id)
             session.add(job)
             session.commit()
@@ -48,14 +48,14 @@ def process_fetch():
     Session = sessionmaker(bind=engine)
     session = Session()
     
-    jade = Jade()
-    shell = jade.connect()
+    cluster = Jade()
+    shell = cluster.connect()
     
     while True:
         print("Checking")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
         for job in jobs :
-            print(jade.pull(shell, job))   
+            print(cluster.pull(shell, job))   
             print(job.status, job.id, job.workdir)
         break
         #time.sleep(60*60) # 60 minutes

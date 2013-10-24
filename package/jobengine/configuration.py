@@ -1,4 +1,6 @@
-private_key_file="/home/jandom/.ssh/id_dsa"
+import os
 
-lockers = "/home/jandom/.lockers"
-engine_file = 'sqlite:////home/jandom/.lockers/jobengine.sql'
+private_key_file=os.path.join(os.environ["HOME"], ".ssh", "id_dsa")
+
+lockers = os.path.join(os.environ["HOME"],".lockers")
+engine_file = 'sqlite:///%s/jobengine.sql' % lockers	  		

@@ -10,6 +10,13 @@ import glob
 import shutil
 import tempfile
 
+# REQUIREMENTS
+# - spur
+# - paramiko
+# - gromacs wrapper
+# - mdanalysis
+# - sql alchemy	
+
 if __name__ == '__main__':
 
     extensions = []
