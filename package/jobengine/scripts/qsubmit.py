@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from jobengine.clusters import get_cluster
+from jobengine.clusters import Clusters
 from jobengine.core import Job, create  
 from jobengine.configuration import engine_file
 
@@ -22,8 +22,7 @@ def main():
     #emerald = Emerald()
     #shell = emerald.connect()
     
-    cluster = get_cluster(args.cluster)()
-    shell = cluster.connect()
+    cluster, shell = Clusters().get_cluster(args.cluster)
     
     engine = create_engine(engine_file)
     Job.metadata.create_all(engine)

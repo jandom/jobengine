@@ -6,8 +6,6 @@ from scp import SCPClient
 import subprocess
 import jobengine.configuration
 
-def get_cluster(name):
-    return clusters[name]
 
 class Job(object):
     
@@ -76,7 +74,8 @@ fi
         assert len(result.output.split(".")) == 6
         return int(result.output.split(".")[0])
         
-          
+    def get_script(self, job_name, *args):
+	return self.script % job_name
     def get_status(self, shell, job):
         if not job.cluster_id: return None
         cmd = self.status_command
@@ -116,21 +115,25 @@ class Emerald(Cluster):
     path = "/home/oxford/eisox118/"
     #password="password1"
     status_command= "qstat -l emerald".split()
-    script = """#!/bin/bash
+    script = """#PBS -V
 #PBS -N %s
-#PBS -l nodes=1:ppn=12
 #PBS -l walltime=24:00:00
+#PBS -l nodes=1:ppn=12
+#PBS -m bea
 
-cd $PBS_O_WORKDIR
+module load libfftw/gnu/3.3.2_mpi gromacs/4.6_mpi
+#cd $PBS_O_WORKDIR
 export MPI_NPROCS=$(wc -l $PBS_NODEFILE | awk '{print $1}')
-export OMP_NUM_THREADS=6
+export OMP_NUM_THREADS=3
+
+cd %s
 
 if [ -f state.cpt ]; then
   mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -cpi
 else
   mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v
 fi
-    """
+"""
     
     def parse_qsub(self, result):
         ids = result.output.split()[1][1:-1], result.output.split()[8][1:-1]
@@ -139,6 +142,8 @@ fi
         #print "ids=", ids
         return ids[0]
 
+    def get_script(self, job_name, remote_workdir):
+	return self.script % (job_name, remote_workdir)
 
     def job_from_string(self, lines):
         lines = lines.split("\n")	

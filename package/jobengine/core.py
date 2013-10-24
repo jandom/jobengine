@@ -100,7 +100,8 @@ def submit(tpr, cluster):
     os.mkdir(workdir)
     os.symlink(workdir, "workdir")
     shutil.copy(tpr, workdir)
-    open("%s/submit.sh" % workdir,"w").write(cluster.script)
+    #open("%s/submit.sh" % workdir,"w").write(cluster.script)
+    open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0))) 
     
     ssh = SSHClient()
     ssh.load_system_host_keys()
@@ -131,7 +132,7 @@ def create(tpr, cluster, job_name="workdir"):
     shutil.copy(tpr, workdir)
     shutil.copy(gro, workdir)
     shutil.copy(mdp, workdir)
-    open("%s/submit.sh" % workdir,"w").write(cluster.script % job_name)
+    open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0)))
     
     ssh = SSHClient()
     ssh.load_system_host_keys()
