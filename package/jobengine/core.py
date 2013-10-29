@@ -146,6 +146,7 @@ def create(tpr, cluster, job_name="workdir"):
         remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
         #result = shell.run(["qsub","%s/.lockers/%s/submit.sh" % (cluster.path, id0)], cwd=remote_workdir)
         #cluster_id = cluster.parse_qsub(result)
+        print local_dir
         j = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, None)
     return j        
         

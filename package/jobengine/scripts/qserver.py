@@ -22,7 +22,6 @@ def process_resubmit():
     engine = create_engine(engine_file)
     Session = sessionmaker(bind=engine)
     session = Session()
-    
     clusters = Clusters()
     
     while True:
@@ -47,13 +46,12 @@ def process_fetch():
     engine = create_engine(engine_file)
     Session = sessionmaker(bind=engine)
     session = Session()
-    
-    cluster = Jade()
-    shell = cluster.connect()
+    clusters = Clusters()
     
     while True:
         print("Checking")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
+        cluster, shell = clusters.get_cluster(job.cluster_name)
         for job in jobs :
             print(cluster.pull(shell, job))   
             print(job.status, job.id, job.workdir)

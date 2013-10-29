@@ -55,13 +55,13 @@ class Jade(Cluster):
     script = """#PBS -V
 #PBS -N %s
 #PBS -l walltime=24:00:00
-#PBS -l nodes=1:ppn=12
+#PBS -l nodes=1:ppn=6
 #PBS -m bea
 
 module load gromacs/4.6__single
 cd $PBS_O_WORKDIR
 export MPI_NPROCS=$(wc -l $PBS_NODEFILE | awk '{print $1}')
-export OMP_NUM_THREADS=6
+export OMP_NUM_THREADS=3
 
 if [ -f state.cpt ]; then
   mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -cpi
@@ -119,14 +119,14 @@ class Emerald(Cluster):
 #PBS -N %s
 #PBS -l walltime=24:00:00
 #PBS -l nodes=1:ppn=12
-#PBS -m bea
+#PDB -x
 
 module load libfftw/gnu/3.3.2_mpi gromacs/4.6_mpi
-#cd $PBS_O_WORKDIR
+
 export MPI_NPROCS=$(wc -l $PBS_NODEFILE | awk '{print $1}')
 export OMP_NUM_THREADS=3
 
-cd %s
+#cd %s
 
 if [ -f state.cpt ]; then
   mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -cpi
@@ -164,7 +164,7 @@ fi
         return j
 
     def submit(self, shell, job):
-        result = shell.run(["qsub","%s/submit.sh" % job.remote_workdir], cwd=job.remote_workdir)
+        result = shell.run(["bsub" ," < ","%s/submit.sh" % job.remote_workdir], cwd=job.remote_workdir)
         cluster_id = self.parse_qsub(result)
         job.cluster_id = cluster_id
         job.status = self.get_status(shell, job)
