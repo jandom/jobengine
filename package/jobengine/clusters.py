@@ -115,16 +115,16 @@ class Emerald(Cluster):
     path = "/home/oxford/eisox118/"
     #password="password1"
     status_command= "qstat -l emerald".split()
-    script = """#PBS -V
-#PBS -N %s
-#PBS -l walltime=24:00:00
-#PBS -l nodes=1:ppn=12
-#PDB -x
+    script = """#BSUB -J %s
+#BSUB -o %J.log
+#BSUB -e %J.err
+#BSUB -W 24:00
+#BSUB -m emerald3g
+#BSUB -n 1
+#BSUB -x
 
-module load libfftw/gnu/3.3.2_mpi gromacs/4.6_mpi
-
-export MPI_NPROCS=$(wc -l $PBS_NODEFILE | awk '{print $1}')
-export OMP_NUM_THREADS=3
+module add libfftw/gnu/3.3.2_mpi
+module add gromacs/4.6_mpi
 
 #cd %s
 
