@@ -21,14 +21,14 @@ class Cluster(object):
     def __repr__(self):
         return "<Cluster>"
 
-    def pull(self, shell, job):
+    def pull(self, shell, job, verbose=False):
         """
         Pull the data from remote workdir into the local workdir using the
         scp command.
         """
         cmd = "rsync -v --progress %s@%s:%s/* %s/  --include='*.xtc' --include='*.log' --exclude='*.*' " \
                              % (self.username, self.hostname, job.remote_workdir,  job.workdir)  
-        print cmd
+        if verbose: print(cmd)
         return subprocess.call(cmd, shell=True)    
     
     def connect(self):

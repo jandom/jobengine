@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-from jobengine.clusters import get_cluster
-from jobengine.core import Job, create  
+from jobengine.clusters import Clusters
+from jobengine.core import Job, create  , get_job_from_workdir
 from jobengine.configuration import engine_file
-from jobengine.clusters import Jade
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker
 from jobengine.configuration import engine_file
@@ -20,19 +19,14 @@ def main():
     engine = create_engine(engine_file)
     Session = sessionmaker(bind=engine)
     session = Session()
+    clusters = Clusters()    
     
-    jade = Jade()
-    shell = jade.connect()
+    job = get_job_from_workdir(session, args.workdir)
     
-    uuid0 = os.path.basename(os.path.realpath(args.workdir))
-    
-    
-    jobs = [job for job in session.query(Job).order_by(Job.id) if job.uuid == uuid0]
-    assert(len(jobs) == 1)
-    job = jobs[0]
     if job.status == "S": return
-    print job
-    jade.delete(shell, job.cluster_id)
+    cluster, shell = clusters.get_cluster(job.cluster_name)
+    print job, cluster, shell
+    cluster.delete(shell, job.cluster_id)
     job.status = "S" # Stopped
     session.add(job)
     session.commit()

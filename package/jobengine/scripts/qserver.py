@@ -49,12 +49,28 @@ def process_fetch():
     clusters = Clusters()
     
     while True:
-        print("Checking")
+        print("Fetching")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
         cluster, shell = clusters.get_cluster(job.cluster_name)
         for job in jobs :
-            print(cluster.pull(shell, job))   
-            print(job.status, job.id, job.workdir)
+            print(job.status, job.name, job.id, job.workdir)
+            if job.status == "S": continue
+            rsync_return_code = cluster.pull(shell, job)   
+            assert(rsync_return_code==0)
+            
+            chemtime, target_chemtime = test_workdir(job.workdir)
+            print chemtime, target_chemtime 
+            # If the simulation hasn't started yet, skip
+            if not (chemtime and target_chemtime): continue
+            # If the target chemtime hasn't been achieved, don't stop
+            if not (chemtime == target_chemtime): continue
+            # Stop the simulation if complete
+            if job.status == "S": continue
+            cluster.delete(shell, job.cluster_id)
+            print("Stopping", job)
+            job.status = "S" # Stopped
+            session.add(job)
+            session.commit()
         break
         #time.sleep(60*60) # 60 minutes
 

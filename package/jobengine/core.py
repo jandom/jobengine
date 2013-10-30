@@ -77,6 +77,7 @@ def test_workdir_contents(mdp_file="grompp.mdp", conf_file="conf.gro", traj_file
     mdp = MDP(mdp_file)
     
     target_time = int(mdp["nsteps"].split()[0]) * mdp["dt"]  # target chemical time in ps
+    if not os.path.exists(traj_file): return None, None
     u = Universe(conf_file, traj_file)
     times = [f.time for f in u.trajectory]
     
@@ -117,6 +118,13 @@ def submit(tpr, cluster):
         cluster_id = cluster.parse_qsub(result)
         j = Job("test", id0, workdir, remote_workdir, cluster.name, cluster_id)
     return j
+
+def get_job_from_workdir(session, workdir):
+    uuid0 = os.path.basename(os.path.realpath(workdir))
+    jobs = [job for job in session.query(Job).order_by(Job.id) if job.uuid == uuid0]
+    assert(len(jobs) == 1)
+    job = jobs[0]    
+    return job
 
 def create(tpr, cluster, job_name="workdir"):
     assert os.path.isfile(tpr)

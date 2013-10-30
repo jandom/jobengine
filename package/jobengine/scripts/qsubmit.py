@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from jobengine.clusters import Clusters
-from jobengine.core import Job, create  
+from jobengine.core import Job, create  , get_job_from_workdir
 from jobengine.configuration import engine_file
 
 from sqlalchemy import create_engine, MetaData
@@ -14,15 +14,11 @@ def parse_args():
     parser.add_argument("--topol", default="topol.tpr")
     parser.add_argument("--jobname", default="workdir")
     parser.add_argument("--cluster", default="jade")
+    parser.add_argument("--workdir", default=None)
     return parser.parse_args()
 
 def main():
     args = parse_args()
-    
-    #emerald = Emerald()
-    #shell = emerald.connect()
-    
-    cluster, shell = Clusters().get_cluster(args.cluster)
     
     engine = create_engine(engine_file)
     Job.metadata.create_all(engine)
@@ -30,18 +26,27 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
     
-    if True:
-        
-        #result = shell.run(["echo", "-n", "hello"])
-        
-        #job = submit("topol.tpr", jade)
+    # Restore an existing workdir
+    if args.workdir:
+        job = get_job_from_workdir(session, args.workdir)
+        if job.status != "S": return
+        cluster, shell = Clusters().get_cluster(job.cluster_name)
+        print job
+        job = cluster.submit(shell, job)
+        print job.status
+        status = cluster.get_status(shell, job)
+        print job.status 
+        session.add(job)
+        session.commit()       
+    # Create a brand-new workdir    
+    else:
+        cluster, shell = Clusters().get_cluster(args.cluster)
         job = create(args.topol, cluster, args.jobname)
         print job
         status = cluster.get_status(shell, job)
         print status
         job = cluster.submit(shell, job)
-        print status    
-        
+        print status            
         session.add(job)
         session.commit()
 
