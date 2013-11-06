@@ -66,6 +66,7 @@ def process_fetch():
             if not (chemtime == target_chemtime): continue
             # Stop the simulation if complete
             if job.status == "S": continue
+            continue
             cluster.delete(shell, job.cluster_id)
             print("Stopping", job)
             job.status = "S" # Stopped
@@ -84,7 +85,7 @@ def process_test():
         print("Testing")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
         for job in jobs :
-            print job.local_workdir, test_workdir(job.workdir)
+            print job.local_workdir if job.local_workdir else job.name, test_workdir(job.workdir)
         break
         #time.sleep(60*60) # 60 minutes
 

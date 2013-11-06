@@ -75,8 +75,12 @@ def test_workdir(workdir):
 
 def test_workdir_contents(mdp_file="grompp.mdp", conf_file="conf.gro", traj_file="workdir/traj.xtc"):
     mdp = MDP(mdp_file)
-    
-    target_time = int(mdp["nsteps"].split()[0]) * mdp["dt"]  # target chemical time in ps
+   
+    if not mdp["nsteps"].isdigit():
+        nsteps = mdp["nsteps"].split()[0]
+    else:
+        nsteps = mdp["nsteps"]
+    target_time = int(nsteps) * mdp["dt"]  # target chemical time in ps
     if not os.path.exists(traj_file): return None, None
     u = Universe(conf_file, traj_file)
     times = [f.time for f in u.trajectory]
