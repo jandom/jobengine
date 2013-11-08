@@ -42,6 +42,7 @@ def main():
     else:
         cluster, shell = Clusters().get_cluster(args.cluster)
         job = create(args.topol, cluster, args.jobname)
+        assert(job)
         print job
         status = cluster.get_status(shell, job)
         print status

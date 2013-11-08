@@ -26,7 +26,9 @@ class Cluster(object):
         Pull the data from remote workdir into the local workdir using the
         scp command.
         """
-        cmd = "rsync -v --progress %s@%s:%s/* %s/  --include='*.xtc' --include='*.log' --include='*.o*' --include='*.e*'  --exclude='*.*' " \
+        
+        # -v --progress
+        cmd = "rsync  %s@%s:%s/* %s/  --include='*.xtc' --include='*.log'  --exclude='*.*' " \
                              % (self.username, self.hostname, job.remote_workdir,  job.workdir)  
         if verbose: print(cmd)
         return subprocess.call(cmd, shell=True)    

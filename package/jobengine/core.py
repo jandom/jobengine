@@ -9,7 +9,7 @@ import shutil
 #shell = spur.SshShell(hostname="localhost", username="bob", password="password1")
 
 from paramiko import SSHClient
-from scp import SCPClient
+from scp import SCPClient, SCPException
 
 # SQAlchemy-related
 from sqlalchemy.ext.declarative import declarative_base
@@ -76,7 +76,7 @@ def test_workdir(workdir):
 def test_workdir_contents(mdp_file="grompp.mdp", conf_file="conf.gro", traj_file="workdir/traj.xtc"):
     mdp = MDP(mdp_file)
    
-    if not mdp["nsteps"].isdigit():
+    if not   isinstance(mdp["nsteps"],int):
         nsteps = mdp["nsteps"].split()[0]
     else:
         nsteps = mdp["nsteps"]
@@ -132,6 +132,7 @@ def get_job_from_workdir(session, workdir):
 
 def create(tpr, cluster, job_name="workdir"):
     assert os.path.isfile(tpr)
+    assert os.path.splitext(tpr)[1] == ".tpr"
     if not os.path.exists(configuration.lockers): os.mkdir(configuration.lockers)
     assert not os.path.exists("workdir")
     id0 = str(uuid.uuid4())
@@ -150,8 +151,13 @@ def create(tpr, cluster, job_name="workdir"):
     ssh.load_system_host_keys()
     ssh.connect(cluster.hostname, username=cluster.username)
     scp = SCPClient(ssh.get_transport())
-    scp.put(workdir, "%s/.lockers/" % (cluster.path), recursive=True)
     
+    try:
+        scp.put(workdir, "%s/.lockers/" % (cluster.path), recursive=True)
+    except SCPException:
+        shutil.rmtree(workdir)
+        os.remove("workdir")
+        return None
     shell = cluster.connect()
     
     with shell:
