@@ -22,14 +22,16 @@ def main():
     clusters = Clusters()    
     
     job = get_job_from_workdir(session, args.workdir)
-    
-    if job.status == "S": return
+    print job
+    if job.status == "S": 
+		print("Job already cancelled")
+		return
     cluster, shell = clusters.get_cluster(job.cluster_name)
-    print job, cluster, shell
-    cluster.delete(shell, job.cluster_id)
+    print cluster, shell    
+    cluster.cancel(shell, job)
     job.status = "S" # Stopped
     session.add(job)
     session.commit()
-    #for j in jobs: print j.uuid
+
 if __name__ == "__main__":
     main()

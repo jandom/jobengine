@@ -44,9 +44,67 @@ class Cluster(object):
         )
         
         return shell
-    def delete(self, shell, cluster_id):
+    def cancel(self, shell, cluster_id):
         pass
-    cancel = delete
+    delete = cancel
+
+class Arcus(Cluster):
+    name = "ARCUS"
+    hostname ="arcus-gpu.oerc.ox.ac.uk"
+    username = "jdomanski"
+    path = "/data/sbcb-membr/jdomanski"
+    status_command = "squeue -u jdomanski"
+    script = """#!/bin/bash
+#SBATCH --time=24:00:00
+#SBATCH --partition=k20
+#SBATCH --nodes=1
+#SBATCH --job-name=%s
+#SBATCH --exclusive
+#SBATCH --gres=gpu:2
+#SBATCH --ntasks-per-node=2
+
+set -e
+
+if [ -f state.cpt ]; then
+  mpirun -np $SLURM_NTASKS mdrun_mpi  -noconfout -resethway -append -v -cpi
+else
+  mpirun -np $SLURM_NTASKS mdrun_mpi  -noconfout -resethway -append -v
+fi
+"""
+
+    def get_script(self, job_name, *args):
+	return self.script % job_name
+    def get_status(self, shell, job):
+        if not job.cluster_id: return None
+        cmd = "%s -j %d" % (self.status_command, job.cluster_id)
+        try:
+            result = shell.run(cmd.split())
+        except spur.RunProcessError,e:
+			assert "slurm_load_jobs error: Invalid job id specified" in e.stderr_output
+			job.status = "C"
+			return "C"
+        result = result.output.split("\n")
+        assert(len(result) == 3)
+        jobid, partition, name, user, st, time, nodes, nodelist = result[1].split()
+        job.status = "R"
+        return str(st) # possible values are "Q"ueued, "R"unning and  "C"omplete
+      
+    def submit(self, shell, job):
+        result = shell.run(["sbatch","%s/submit.sh" % job.remote_workdir], cwd=job.remote_workdir)
+        #"Submitted batch job 2639"
+        assert("Submitted batch job" in result.output)
+        cluster_id = int(result.output.split()[-1])
+        job.cluster_id = cluster_id
+        job.status = self.get_status(shell, job)
+        return job
+        
+    def cancel(self, shell, job):
+        status = self.get_status(shell, job)
+        if status == "R" or status == "PD": # slurm status codes: Running and Pending
+          result = shell.run(["scancel", str(job.cluster_id)])
+          if result.output:
+            return False 
+        return True
     
 class Jade(Cluster):
     name = "JADE"
@@ -104,10 +162,12 @@ fi
         job.status = self.get_status(shell, job)
         return job
         
-    def delete(self, shell, cluster_id):
-        result = shell.run(["qdel", str(cluster_id)])
-        if result.output:
-            return False
+    def cancel(self, shell, job):
+        status = self.get_status(shell, job)
+        if status == "R":
+          result = shell.run(["qdel", str(job.cluster_id)])
+          if result.output:
+            return False 
         return True
         
 class Emerald(Cluster):
@@ -192,7 +252,7 @@ fi
 
 
 class Clusters(object):
-    clusters = {"jade": Jade, "emerald": Emerald}
+    clusters = {"jade": Jade, "emerald": Emerald, "arcus": Arcus}
     def __init__(self):
         self.__clusters_cache = {}    
     def get_cluster(self, cluster_name):
