@@ -10,6 +10,8 @@ import glob
 import shutil
 import tempfile
 
+import gromacs, spur, paramiko, scp, sqlalchemy, mdanalysis
+
 # REQUIREMENTS
 # - spur
 # - paramiko
