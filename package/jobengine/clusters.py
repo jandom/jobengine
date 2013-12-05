@@ -17,9 +17,14 @@ class Job(object):
         stdout = None
         stderr = None
 
+
 class Cluster(object):
+    name = None
+    hostname = None
+    username = None
+    path = None
     def __repr__(self):
-        return "<Cluster>"
+        return "<Cluster '%s' %s@%s:%s>" % (self.name, self.username, self.hostname, self.path)
 
     def pull(self, shell, job, verbose=False):
         """
@@ -84,11 +89,11 @@ fi
 			job.status = "C"
 			return "C"
         result = result.output.split("\n")
-        assert(len(result) == 3)
-        jobid, partition, name, user, st, time, nodes, nodelist = result[1].split()
-        job.status = "R"
-        return str(st) # possible values are "Q"ueued, "R"unning and  "C"omplete
-      
+	st = "C"
+        if(len(result) == 3):
+	        jobid, partition, name, user, st, time, nodes, nodelist = result[1].split()
+        	job.status = st
+        return str(st)       
     def submit(self, shell, job):
         result = shell.run(["sbatch","%s/submit.sh" % job.remote_workdir], cwd=job.remote_workdir)
         #"Submitted batch job 2639"

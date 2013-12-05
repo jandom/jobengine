@@ -23,11 +23,11 @@ def main():
     
     job = get_job_from_workdir(session, args.workdir)
     print job
-    if job.status == "S": 
-		print("Job already cancelled")
-		return
     cluster, shell = clusters.get_cluster(job.cluster_name)
     print cluster, shell    
+    if job.status == "S": 
+		print("Job already cancelled")
+		return    
     cluster.cancel(shell, job)
     job.status = "S" # Stopped
     session.add(job)
