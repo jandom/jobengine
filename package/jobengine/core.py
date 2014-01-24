@@ -130,7 +130,7 @@ def get_job_from_workdir(session, workdir):
     job = jobs[0]    
     return job
 
-def create(tpr, cluster, job_name="workdir"):
+def create(tpr, cluster, job_name="workdir", duration="24:00:00"):
     assert os.path.isfile(tpr)
     assert os.path.splitext(tpr)[1] == ".tpr"
     if not os.path.exists(configuration.lockers): os.mkdir(configuration.lockers)
@@ -145,7 +145,7 @@ def create(tpr, cluster, job_name="workdir"):
     shutil.copy(tpr, workdir)
     shutil.copy(gro, workdir)
     shutil.copy(mdp, workdir)
-    open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0)))
+    open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0), duration))
     
     ssh = SSHClient()
     ssh.load_system_host_keys()

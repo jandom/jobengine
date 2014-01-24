@@ -26,7 +26,8 @@ def process_fetch(args):
     
     job = get_job_from_workdir(session, args.workdir)
     cluster, shell = clusters.get_cluster(job.cluster_name)
-    
+
+    print(job)    
     print(job.status, job.name, job.id, job.workdir)
     if job.status == "S": return
     rsync_return_code = cluster.pull(shell, job)   

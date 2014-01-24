@@ -25,7 +25,8 @@ class Cluster(object):
     path = None
     def __repr__(self):
         return "<Cluster '%s' %s@%s:%s>" % (self.name, self.username, self.hostname, self.path)
-
+    def get_script(self, *args):
+        return self.script % (args[0], args[2])
     def pull(self, shell, job, verbose=False):
         """
         Pull the data from remote workdir into the local workdir using the
@@ -33,7 +34,7 @@ class Cluster(object):
         """
         
         # -v --progress
-        cmd = "rsync  %s@%s:%s/* %s/  --include='*.xtc' --include='*.log'  --exclude='*.*' " \
+        cmd = "rsync  %s@%s:%s/* %s/  --include='*.xtc' --include='*.log' --include='*.ndx' --exclude='*.*' " \
                              % (self.username, self.hostname, job.remote_workdir,  job.workdir)  
         if verbose: print(cmd)
         return subprocess.call(cmd, shell=True)    
@@ -53,32 +54,35 @@ class Cluster(object):
         pass
     delete = cancel
 
+      
+    def get_status_all(self, shell):
+        result = shell.run(self.status_all_command.split())
+        return result.output
+
 class Arcus(Cluster):
     name = "ARCUS"
     hostname ="arcus-gpu.oerc.ox.ac.uk"
     username = "jdomanski"
     path = "/data/sbcb-membr/jdomanski"
     status_command = "squeue -u jdomanski"
+    status_all_command = "squeue -u jdomanski"
     script = """#!/bin/bash
-#SBATCH --time=24:00:00
+#SBATCH --job-name=%s
+#SBATCH --time=%s
 #SBATCH --partition=k20
 #SBATCH --nodes=1
-#SBATCH --job-name=%s
-#SBATCH --exclusive
-#SBATCH --gres=gpu:2
-#SBATCH --ntasks-per-node=2
+#SBATCH --gres=gpu:1
+#SBATCH --ntasks-per-node=1
 
 set -e
 
 if [ -f state.cpt ]; then
-  mpirun -np $SLURM_NTASKS mdrun_mpi  -noconfout -resethway -append -v -cpi
+  mpirun -np 1 mdrun_mpi -ntomp 6 -append -v -cpi  # -noconfout -resethway
 else
-  mpirun -np $SLURM_NTASKS mdrun_mpi  -noconfout -resethway -append -v
+  mpirun -np 1 mdrun_mpi -ntomp 6 -append -v #  -noconfout -resethway 
 fi
 """
 
-    def get_script(self, job_name, *args):
-	return self.script % job_name
     def get_status(self, shell, job):
         if not job.cluster_id: return None
         cmd = "%s -j %d" % (self.status_command, job.cluster_id)
@@ -117,12 +121,14 @@ class Jade(Cluster):
     username = "jdomanski"
     path = "/data/sbcb-membr/jdomanski"
     status_command = "qstat -x"
+    status_all_command = "qstat -u jdomanski"
     script = """#PBS -V
 #PBS -N %s
-#PBS -l walltime=24:00:00
+#PBS -l walltime=%s
 #PBS -l nodes=1:ppn=6
 #PBS -m bea
 
+module purge
 module load gromacs/4.6__single
 cd $PBS_O_WORKDIR
 export MPI_NPROCS=$(wc -l $PBS_NODEFILE | awk '{print $1}')
@@ -139,8 +145,6 @@ fi
         assert len(result.output.split(".")) == 6
         return int(result.output.split(".")[0])
         
-    def get_script(self, job_name, *args):
-	return self.script % job_name
     def get_status(self, shell, job):
         if not job.cluster_id: return None
         cmd = self.status_command
@@ -174,6 +178,33 @@ fi
           if result.output:
             return False 
         return True
+
+class Skynet(Jade):
+    name = "SKYNET"
+    hostname ="skynet.oerc.ox.ac.uk"
+    script = """#PBS -V
+#PBS -N %s
+#PBS -l walltime=%s
+#PBS -l nodes=1:ppn=4
+#PBS -m bea
+
+module purge
+module load gromacs/4.6__single
+cd $PBS_O_WORKDIR
+export MPI_NPROCS=$(wc -l $PBS_NODEFILE | awk '{print $1}')
+export OMP_NUM_THREADS=2
+
+if [ -f state.cpt ]; then
+  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -cpi
+else
+  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v
+fi
+"""
+
+class Hal(Jade):
+    name = "HAL"
+    hostname ="hal.oerc.ox.ac.uk"
+
         
 class Emerald(Cluster):
     name = "EMERALD"
@@ -182,7 +213,8 @@ class Emerald(Cluster):
     path = "/home/oxford/eisox118/"
     #password="password1"
     status_command= "qstat -l emerald".split()
-    script = """#BSUB -J %s
+    status_all_command= "qstat -u eisox118 emerald"
+    script = """#BSUB -J {0}
 #BSUB -o %J.log
 #BSUB -e %J.err
 #BSUB -W 24:00
@@ -252,12 +284,10 @@ fi
         assert status in ["WAITING", "RUNNING"]
         if status == "WAITING": return "Q"
         if status == "RUNNING": return "R"
-      
-
 
 
 class Clusters(object):
-    clusters = {"jade": Jade, "emerald": Emerald, "arcus": Arcus}
+    clusters = {"jade": Jade, "emerald": Emerald, "arcus": Arcus, "hal": Hal, "skynet": Skynet}
     def __init__(self):
         self.__clusters_cache = {}    
     def get_cluster(self, cluster_name):
