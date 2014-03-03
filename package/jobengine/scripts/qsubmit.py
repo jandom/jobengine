@@ -16,6 +16,7 @@ def parse_args():
     parser.add_argument("--cluster", default="jade")
     parser.add_argument("--workdir", default=None)
     parser.add_argument("--duration", default="24:00:00")
+    parser.add_argument("--nodes", type=int, default=1)
     return parser.parse_args()
 
 def main():
@@ -42,12 +43,13 @@ def main():
     # Create a brand-new workdir    
     else:
         cluster, shell = Clusters().get_cluster(args.cluster)
-        job = create(args.topol, cluster, args.jobname, args.duration)
+        job = create(args.topol, cluster, args.jobname, args.duration, args.nodes)
         assert(job)
         print job
         status = cluster.get_status(shell, job)
         print status
-        job = cluster.submit(shell, job)
+        if not job.cluster_id:
+            job = cluster.submit(shell, job)
         print status            
         session.add(job)
         session.commit()

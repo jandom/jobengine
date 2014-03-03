@@ -27,10 +27,11 @@ class Job(Base):
      local_workdir = Column(String)
      cluster_name = Column(String)
      cluster_id = Column(Integer)
+     nodes = Column(Integer)
      
      status = Column(String)
 
-     def __init__(self, name, uuid, workdir, local_workdir, remote_workdir, cluster_name, cluster_id,):
+     def __init__(self, name, uuid, workdir, local_workdir, remote_workdir, cluster_name, cluster_id, nodes=1):
          self.name = name
          self.uuid = uuid
          self.workdir = workdir
@@ -41,6 +42,7 @@ class Job(Base):
          self.local_workdir = local_workdir
          self.current_chemtime = 0.0
          self.target_chemtime = 0.01
+         self.nodes = nodes
          
 
      def __repr__(self):
@@ -130,7 +132,7 @@ def get_job_from_workdir(session, workdir):
     job = jobs[0]    
     return job
 
-def create(tpr, cluster, job_name="workdir", duration="24:00:00"):
+def create(tpr, cluster, job_name="workdir", duration="24:00:00", nodes=1):
     assert os.path.isfile(tpr)
     assert os.path.splitext(tpr)[1] == ".tpr"
     if not os.path.exists(configuration.lockers): os.mkdir(configuration.lockers)
@@ -142,29 +144,40 @@ def create(tpr, cluster, job_name="workdir", duration="24:00:00"):
     local_dir = os.path.dirname(tpr) # FIXME this should be stored
     gro = os.path.join(local_dir, "conf.gro")
     mdp = os.path.join(local_dir, "grompp.mdp")
+    plumed = os.path.join(local_dir, "plumed.dat")
     shutil.copy(tpr, workdir)
     shutil.copy(gro, workdir)
     shutil.copy(mdp, workdir)
-    open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0), duration))
-    
-    ssh = SSHClient()
-    ssh.load_system_host_keys()
-    ssh.connect(cluster.hostname, username=cluster.username)
-    scp = SCPClient(ssh.get_transport())
-    
+    if os.path.exists(plumed): shutil.copy(plumed, workdir) 
+    open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0), duration, nodes))
+
+    if not cluster.name.lower() == "biowulf":
+      ssh = SSHClient()
+      ssh.load_system_host_keys()
+      ssh.connect(cluster.hostname, username=cluster.username)
+      scp = SCPClient(ssh.get_transport())
+    else:
+      ssh = SSHClient()
+      ssh.load_system_host_keys()
+      ssh.connect("helix.nih.gov", username="domanskij")
+      scp = SCPClient(ssh.get_transport())      
     try:
         scp.put(workdir, "%s/.lockers/" % (cluster.path), recursive=True)
     except SCPException:
         shutil.rmtree(workdir)
         os.remove("workdir")
         return None
+    finally:
+        ssh.close()
+    print cluster
     shell = cluster.connect()
+    print shell
     
-    with shell:
-        remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
-        #result = shell.run(["qsub","%s/.lockers/%s/submit.sh" % (cluster.path, id0)], cwd=remote_workdir)
-        #cluster_id = cluster.parse_qsub(result)
-        print local_dir
-        j = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, None)
+    remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
+
+    result = cluster.do_submit(shell, remote_workdir, nodes=nodes)
+    cluster_id = cluster.parse_qsub(result)
+    j = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes)
+
     return j        
         

@@ -1,11 +1,10 @@
 import spur
 from xml.dom import minidom
-# paramiko
+import paramiko
 from paramiko import SSHClient
 from scp import SCPClient
 import subprocess
 import jobengine.configuration
-
 
 class Job(object):
     
@@ -34,7 +33,7 @@ class Cluster(object):
         """
         
         # -v --progress
-        cmd = "rsync  %s@%s:%s/* %s/  --include='*.xtc' --include='*.log' --include='*.ndx' --exclude='*.*' " \
+        cmd = "rsync  %s@%s:%s/* %s/  --include='*.xtc' --include='*.gro' --include='*HILLS*' --include='*.log' --include='*.ndx' --exclude='*.*' " \
                              % (self.username, self.hostname, job.remote_workdir,  job.workdir)  
         if verbose: print(cmd)
         return subprocess.call(cmd, shell=True)    
@@ -77,12 +76,16 @@ class Arcus(Cluster):
 set -e
 
 if [ -f state.cpt ]; then
-  mpirun -np 1 mdrun_mpi -ntomp 6 -append -v -cpi  # -noconfout -resethway
+  mpirun -np 1 mdrun_mpi -ntomp 6 -append -v -cpi  -maxh 24 # -noconfout -resethway
 else
-  mpirun -np 1 mdrun_mpi -ntomp 6 -append -v #  -noconfout -resethway 
+  mpirun -np 1 mdrun_mpi -ntomp 6 -append -v -maxh 24 #  -noconfout -resethway 
 fi
 """
+    def parse_qsub(self, result):
+        assert "Submitted batch job " in result.output
+        return int(result.output.replace("Submitted batch job ", ""))
 
+        
     def get_status(self, shell, job):
         if not job.cluster_id: return None
         cmd = "%s -j %d" % (self.status_command, job.cluster_id)
@@ -97,9 +100,13 @@ fi
         if(len(result) == 3):
 	        jobid, partition, name, user, st, time, nodes, nodelist = result[1].split()
         	job.status = st
-        return str(st)       
-    def submit(self, shell, job):
-        result = shell.run(["sbatch","%s/submit.sh" % job.remote_workdir], cwd=job.remote_workdir)
+        return str(st)   
+      
+    def do_submit(self, shell, remote_workdir):
+        result = shell.run(["sbatch","%s/submit.sh" % remote_workdir], cwd=remote_workdir)  
+        return result
+    def submit(self, shell, job):        
+        result = self.do_submit(shell, job.remote_workdir)
         #"Submitted batch job 2639"
         assert("Submitted batch job" in result.output)
         cluster_id = int(result.output.split()[-1])
@@ -125,7 +132,7 @@ class Jade(Cluster):
     script = """#PBS -V
 #PBS -N %s
 #PBS -l walltime=%s
-#PBS -l nodes=1:ppn=6
+#PBS -l nodes=1:ppn=3
 #PBS -m bea
 
 module purge
@@ -135,9 +142,9 @@ export MPI_NPROCS=$(wc -l $PBS_NODEFILE | awk '{print $1}')
 export OMP_NUM_THREADS=3
 
 if [ -f state.cpt ]; then
-  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -cpi
+  mpirun -np 1 mdrun_mpi  -resethway -append -v -cpi -maxh 24
 else
-  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v
+  mpirun -np 1 mdrun_mpi  -resethway -append -v -maxh 24
 fi
 """
 
@@ -163,9 +170,14 @@ fi
         status = state[0].lastChild.data
         job.status = status
         return str(status) # possible values are "Q"ueued, "R"unning and  "C"omplete
-      
-    def submit(self, shell, job):
-        result = shell.run(["qsub","%s/submit.sh" % job.remote_workdir], cwd=job.remote_workdir)
+
+
+    def do_submit(self, shell, remote_workdir, **kwargs):
+        result = shell.run(["qsub","%s/submit.sh" % remote_workdir], cwd=remote_workdir)  
+        return result
+    
+    def submit(self, shell, job, **kwargs):        
+        result = self.do_submit(shell, job.remote_workdir)
         cluster_id = self.parse_qsub(result)
         job.cluster_id = cluster_id
         job.status = self.get_status(shell, job)
@@ -186,7 +198,6 @@ class Skynet(Jade):
 #PBS -N %s
 #PBS -l walltime=%s
 #PBS -l nodes=1:ppn=4
-#PBS -m bea
 
 module purge
 module load gromacs/4.6__single
@@ -195,9 +206,9 @@ export MPI_NPROCS=$(wc -l $PBS_NODEFILE | awk '{print $1}')
 export OMP_NUM_THREADS=2
 
 if [ -f state.cpt ]; then
-  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -cpi
+  mpirun -np 1 mdrun_mpi  -noconfout -resethway -append -v -cpi -maxh 24
 else
-  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v
+  mpirun -np 1 mdrun_mpi  -noconfout -resethway -append -v -maxh 24
 fi
 """
 
@@ -205,6 +216,124 @@ class Hal(Jade):
     name = "HAL"
     hostname ="hal.oerc.ox.ac.uk"
 
+class Biowulf(Jade):
+    """
+    Access to biowulf is much more contrived then others - we're using its definition 
+    from the ~/.ssh/config which includes a ProxyCommand
+    
+    spur cannot support ProxyCommand, so lower-level paramiko is used. 
+    The standard connect() method is overriden. 
+    """
+    name = "BIOWULF"
+    hostname = "helix.nih.gov"
+    username = "domanskij"
+    path = "/data/domanskij"
+    status_command= "qstat -l lcp".split()
+
+    def parse_qsub(self, stdout):
+        lines = stdout.readlines()
+        assert(len(lines)==1)
+        cluster_id = int(lines[0].split(".biobos")[0])
+        return cluster_id      
+
+    def get_script(self, *args):
+        return self.script % (args[0][:15], args[2], 16*args[3])
+    
+    def get_scp(self):
+        client = self.connect()
+        print client
+        (stdin, stdout, stderr) = client.exec_command("uname -a")    
+        scp = SCPClient(client.get_transport())
+        print scp
+        return scp
+
+    def cancel(self, shell, job):
+        status = self.get_status(shell, job)
+        if status == "R":
+          cmd = "/usr/local/pbs/bin/qdel {}".format(str(job.cluster_id))
+          (stdin, stdout, stderr) = shell.exec_command(cmd)
+          if stdout:
+            return False 
+        return True
+    
+    def get_status_all(self, shell):
+        (stdin, stdout, stderr) = shell.exec_command("/usr/local/pbs/bin/qstat -u {}".format(self.username))
+        stdout = stdout.readlines()
+        stderr = stderr.readlines()
+        return "".join(stdout)
+        
+    def get_status(self, shell, job):
+        (stdin, stdout, stderr) = shell.exec_command("/usr/local/pbs/bin/qstat {}".format(job.cluster_id))
+        stdout = stdout.readlines()
+        stderr = stderr.readlines()
+
+        if len(stderr) and "Unknown Job Id" in stderr[0]: 
+            job.status = "C"
+            return "C" 
+        assert(len(stdout)==3)
+        status_code = stdout[-1].split()[-2]
+        return str(status_code)
+    
+    def connect(self):
+        dsa_key = paramiko.DSSKey.from_private_key_file(jobengine.configuration.private_key_file)
+        
+        conf = paramiko.SSHConfig()
+        conf.parse(open('/home/jandom/.ssh/config'))
+        host = conf.lookup('biowulf')
+
+        proxy = paramiko.ProxyCommand(host['proxycommand'])
+        
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(host["hostname"], username=host["user"], pkey=dsa_key, sock=proxy)
+
+        return client
+    def do_submit(self, shell, remote_workdir, **kwargs):
+        print kwargs.get('nodes', 1)
+        (stdin, stdout, stderr) = shell.exec_command("cd {}; /usr/local/pbs/bin/qsub -q lcp -l nodes={} submit.sh".format(remote_workdir, kwargs.get('nodes', 1)))
+        return stdout    
+    def submit(self, shell, job, **kwargs):
+        #result = shell.run(["qsub","-q", "lcp", "-l", "nodes=12","%s/submit.sh" % job.remote_workdir], cwd=job.remote_workdir)
+        #(stdin, stdout, stderr) = shell.exec_command("cd {}; /usr/local/pbs/bin/qsub -q lcp -l nodes=10 submit.sh".format(job.remote_workdir))
+        kwargs["nodes"] = job.nodes
+        stdout = self.do_submit(shell, job.remote_workdir, **kwargs)
+        cluster_id = self.parse_qsub(stdout)
+        job.cluster_id = cluster_id
+        job.status = self.get_status(shell, job)
+        return job 
+    script = """#!/bin/bash
+
+#PBS -N "%s"
+
+##PBS -l nodes=1:c24,walltime=%s
+
+#source /usr/local/gromacs/bin/GMXRC
+
+module load openmpi/1.6.4/intel/ib
+module load gromacs/4.5.5+plumed-ib
+
+mpirun=`which mpirun`
+application=`which mdrun_mpi`
+
+cd ${PBS_O_WORKDIR}
+
+np=%d
+
+if [ -f plumed.dat ]; then
+  options="-v -plumed -maxh 24"
+else
+  options="-v -maxh 24"
+fi
+
+echo "Running: $mpirun -np $np $application $options"
+
+if [ -f state.cpt ]; then
+  $mpirun -machinefile $PBS_NODEFILE -n $np $application $options -cpi
+else
+  $mpirun -machinefile $PBS_NODEFILE -n $np $application $options
+fi
+    
+"""
         
 class Emerald(Cluster):
     name = "EMERALD"
@@ -228,9 +357,9 @@ module add gromacs/4.6_mpi
 #cd %s
 
 if [ -f state.cpt ]; then
-  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -cpi
+  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -cpi -maxh 24
 else
-  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v
+  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -maxh 24
 fi
 """
     
@@ -287,7 +416,7 @@ fi
 
 
 class Clusters(object):
-    clusters = {"jade": Jade, "emerald": Emerald, "arcus": Arcus, "hal": Hal, "skynet": Skynet}
+    clusters = {"jade": Jade, "emerald": Emerald, "arcus": Arcus, "hal": Hal, "skynet": Skynet, "biowulf": Biowulf}
     def __init__(self):
         self.__clusters_cache = {}    
     def get_cluster(self, cluster_name):

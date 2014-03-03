@@ -20,8 +20,10 @@ class HelloWorld(object):
         
         for k, v in clusters.clusters.items():
             print k
+            if k == "skynet": continue
+            #if k == "biowulf": continue
             cluster, shell = clusters.get_cluster(k)
-            output.append(k)
+            output.append("==={0}===\n".format(k))
             output.append(cluster.get_status_all(shell))
             
         return "<pre>{0}</pre>".format("".join(output))

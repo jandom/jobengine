@@ -29,7 +29,7 @@ def process_fetch(args):
 
     print(job)    
     print(job.status, job.name, job.id, job.workdir)
-    if job.status == "S": return
+    #if job.status == "S": return
     rsync_return_code = cluster.pull(shell, job)   
     assert(rsync_return_code==0)
     

@@ -15,9 +15,10 @@ import subprocess
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--action", default="resubmit")
+    parser.add_argument("--cluster", default=None)
     return parser.parse_args()
 
-def process_resubmit():
+def process_resubmit(args):
 
     engine = create_engine(engine_file)
     Session = sessionmaker(bind=engine)
@@ -28,8 +29,12 @@ def process_resubmit():
         print("Checking")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
         for job in jobs :
-            cluster, shell = clusters.get_cluster(job.cluster_name)
             if job.status == "S": continue
+            if "skynet" == job.cluster_name.lower(): continue
+            if "biowulf" == job.cluster_name.lower(): continue
+            if args.cluster and not args.cluster == job.cluster_name.lower(): continue
+            print job
+            cluster, shell = clusters.get_cluster(job.cluster_name)
             status = cluster.get_status(shell, job)
             job.status = status 
             print("Before:",status, job.id)
@@ -41,7 +46,7 @@ def process_resubmit():
         break
         time.sleep(5*60) # 5 minutes
 
-def process_fetch():
+def process_fetch(args):
 
     engine = create_engine(engine_file)
     Session = sessionmaker(bind=engine)
@@ -51,13 +56,16 @@ def process_fetch():
     while True:
         print("Fetching")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
-        cluster, shell = clusters.get_cluster(job.cluster_name)
         for job in jobs :
-            print(job.status, job.name, job.id, job.workdir)
+            cluster, shell = clusters.get_cluster(job.cluster_name)
             if job.status == "S": continue
+            #print(job.status, job.name, job.id, job.workdir)
+            #if "translocon" in job.name: continue
+            print(job)
+            #if job.cluster_name.lower() == "skynet": continue
             rsync_return_code = cluster.pull(shell, job)   
             assert(rsync_return_code==0)
-            
+            continue
             chemtime, target_chemtime = test_workdir(job.workdir)
             print chemtime, target_chemtime 
             # If the simulation hasn't started yet, skip
@@ -75,7 +83,7 @@ def process_fetch():
         break
         #time.sleep(60*60) # 60 minutes
 
-def process_test():
+def process_test(args):
     
     engine = create_engine(engine_file)
     Session = sessionmaker(bind=engine)
@@ -95,11 +103,11 @@ def main():
     args = parse_args()
   
     if args.action == "resubmit":
-        process_resubmit()
+        process_resubmit(args)
     if args.action == "fetch":
-        process_fetch()
+        process_fetch(args)
     if args.action == "test":
-        process_test()
+        process_test(args)
     #Process(target=process_resubmit).start()
     #Process(target=process_fetch).start()    
     

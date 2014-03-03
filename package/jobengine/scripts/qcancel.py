@@ -27,7 +27,6 @@ def main():
     print cluster, shell    
     if job.status == "S": 
 		print("Job already cancelled")
-		return    
     cluster.cancel(shell, job)
     job.status = "S" # Stopped
     session.add(job)
