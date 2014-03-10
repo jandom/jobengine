@@ -102,7 +102,7 @@ fi
         	job.status = st
         return str(st)   
       
-    def do_submit(self, shell, remote_workdir):
+    def do_submit(self, shell, remote_workdir,  **kwargs):
         result = shell.run(["sbatch","%s/submit.sh" % remote_workdir], cwd=remote_workdir)  
         return result
     def submit(self, shell, job):        
@@ -237,7 +237,7 @@ class Biowulf(Jade):
         return cluster_id      
 
     def get_script(self, *args):
-        return self.script % (args[0][:15], args[2], 16*args[3])
+        return self.script % (args[0][:15], args[2], args[3]*args[4])
     
     def get_scp(self):
         client = self.connect()
@@ -321,6 +321,7 @@ np=%d
 
 if [ -f plumed.dat ]; then
   options="-v -plumed -maxh 24"
+  touch HILLS
 else
   options="-v -maxh 24"
 fi

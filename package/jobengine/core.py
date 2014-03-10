@@ -46,7 +46,10 @@ class Job(Base):
          
 
      def __repr__(self):
-        return "<Job '%s Cluster: %s'>\n\tId: %d UUID: %s\n\tWorkdir: %s\n\tRemote workdir: %s" % (self.name, self.cluster_name, self.id if self.id else 0, self.uuid, self.workdir, self.remote_workdir,)
+        return "<Job '%s Cluster: %s'>\n\tId: %d Cluster Id: %d UUID: %s\n\tWorkdir: %s\n\tRemote workdir: %s" % (self.name, self.cluster_name, 
+                                                                                                                  self.id if self.id else 0,
+                                                                                                                  self.cluster_id if self.cluster_id else 0 ,
+                                                                                                                  self.uuid, self.workdir, self.remote_workdir,)
 
 def connect(host):
     
@@ -132,7 +135,7 @@ def get_job_from_workdir(session, workdir):
     job = jobs[0]    
     return job
 
-def create(tpr, cluster, job_name="workdir", duration="24:00:00", nodes=1):
+def create(tpr, cluster, job_name="workdir", duration="24:00:00", nodes=1, processes=16):
     assert os.path.isfile(tpr)
     assert os.path.splitext(tpr)[1] == ".tpr"
     if not os.path.exists(configuration.lockers): os.mkdir(configuration.lockers)
@@ -149,7 +152,8 @@ def create(tpr, cluster, job_name="workdir", duration="24:00:00", nodes=1):
     shutil.copy(gro, workdir)
     shutil.copy(mdp, workdir)
     if os.path.exists(plumed): shutil.copy(plumed, workdir) 
-    open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0), duration, nodes))
+    print nodes, processes
+    open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0), duration, nodes, processes))
 
     if not cluster.name.lower() == "biowulf":
       ssh = SSHClient()

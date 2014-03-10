@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument("--workdir", default=None)
     parser.add_argument("--duration", default="24:00:00")
     parser.add_argument("--nodes", type=int, default=1)
+    parser.add_argument("--processes", type=int, default=16)
     return parser.parse_args()
 
 def main():
@@ -31,7 +32,8 @@ def main():
     # Restore an existing workdir
     if args.workdir:
         job = get_job_from_workdir(session, args.workdir)
-        if job.status != "S": return
+        #if job.status != "Q": return
+        #if job.status != "R": return
         cluster, shell = Clusters().get_cluster(job.cluster_name)
         print job
         job = cluster.submit(shell, job)
@@ -43,7 +45,7 @@ def main():
     # Create a brand-new workdir    
     else:
         cluster, shell = Clusters().get_cluster(args.cluster)
-        job = create(args.topol, cluster, args.jobname, args.duration, args.nodes)
+        job = create(args.topol, cluster, args.jobname, args.duration, args.nodes, args.processes )
         assert(job)
         print job
         status = cluster.get_status(shell, job)
