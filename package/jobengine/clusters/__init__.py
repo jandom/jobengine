@@ -10,11 +10,12 @@ __all__ = ["Jade", "Biowulf", "Emerald", "Arcus", "Skynet", "Hal", "Clusters"]
 
 class Clusters(object):
     clusters = {"jade": Jade, "emerald": Emerald, "arcus": Arcus, "hal": Hal, "skynet": Skynet, "biowulf": Biowulf}
+    clusters = {"jade": Jade, "arcus": Arcus, "biowulf": Biowulf, "arcus-gpu": Arcus,}
     def __init__(self):
         self.__clusters_cache = {}    
-    def get_cluster(self, cluster_name):
+    def get_cluster(self, cluster_name, caching=False):
         cluster_name = cluster_name.lower()
-        if self.__clusters_cache.has_key(cluster_name):
+        if caching and self.__clusters_cache.has_key(cluster_name):
             return self.__clusters_cache[cluster_name]
         cluster = self.clusters[cluster_name]
         

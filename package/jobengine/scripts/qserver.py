@@ -25,15 +25,14 @@ def process_resubmit(args):
     session = Session()
     clusters = Clusters()
     
-    while True:
+    if True:
         print("Checking")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
         for job in jobs :
             if job.status == "S": continue
-            if "skynet" == job.cluster_name.lower(): continue
-            if "biowulf" == job.cluster_name.lower(): continue
+            if "biowulf" != job.cluster_name.lower(): continue
             if args.cluster and not args.cluster == job.cluster_name.lower(): continue
-            print job
+            print job            
             cluster, shell = clusters.get_cluster(job.cluster_name)
             status = cluster.get_status(shell, job)
             job.status = status 
@@ -43,8 +42,8 @@ def process_resubmit(args):
                 print("After:", job.status, job.id)
             session.add(job)
             session.commit()
-        break
-        time.sleep(5*60) # 5 minutes
+        #break
+        #time.sleep(5*60) # 5 minutes
 
 def process_fetch(args):
 
@@ -62,10 +61,9 @@ def process_fetch(args):
             #print(job.status, job.name, job.id, job.workdir)
             #if "translocon" in job.name: continue
             print(job)
-            #if job.cluster_name.lower() == "skynet": continue
+            if job.cluster_name.lower() != "biowulf": continue
             rsync_return_code = cluster.pull(shell, job)   
             assert(rsync_return_code==0)
-            continue
             chemtime, target_chemtime = test_workdir(job.workdir)
             print chemtime, target_chemtime 
             # If the simulation hasn't started yet, skip

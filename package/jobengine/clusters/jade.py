@@ -1,4 +1,4 @@
-
+import spur
 from base import Cluster
 import paramiko
 from scp import SCPClient
@@ -7,6 +7,7 @@ from xml.dom import minidom
     
 class Jade(Cluster):
     name = "JADE"
+    proxy = "clathrin"
     hostname ="jade.oerc.ox.ac.uk"
     username = "jdomanski"
     path = "/data/sbcb-membr/jdomanski"
@@ -53,7 +54,6 @@ fi
         status = state[0].lastChild.data
         job.status = status
         return str(status) # possible values are "Q"ueued, "R"unning and  "C"omplete
-
 
     def do_submit(self, shell, remote_workdir, **kwargs):
         result = shell.run(["qsub","%s/submit.sh" % remote_workdir], cwd=remote_workdir)  

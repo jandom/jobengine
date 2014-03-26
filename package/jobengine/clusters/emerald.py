@@ -6,6 +6,7 @@ class Emerald(Cluster):
     hostname="emerald.einfrastructuresouth.ac.uk"
     username="eisox118"
     path = "/home/oxford/eisox118/"
+    proxy = "clathrin"
     #password="password1"
     status_command= "qstat -l emerald".split()
     status_all_command= "qstat -u eisox118 emerald"

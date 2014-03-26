@@ -28,7 +28,6 @@ class Job(Base):
      cluster_name = Column(String)
      cluster_id = Column(Integer)
      nodes = Column(Integer)
-     
      status = Column(String)
 
      def __init__(self, name, uuid, workdir, local_workdir, remote_workdir, cluster_name, cluster_id, nodes=1):
@@ -46,9 +45,10 @@ class Job(Base):
          
 
      def __repr__(self):
-        return "<Job '%s Cluster: %s'>\n\tId: %d Cluster Id: %d UUID: %s\n\tWorkdir: %s\n\tRemote workdir: %s" % (self.name, self.cluster_name, 
+        return "<Job '%s Cluster: %s'>\n\tId: %d Cluster Id: %d Status: %s UUID: %s\n\tWorkdir: %s\n\tRemote workdir: %s" % (self.name, self.cluster_name, 
                                                                                                                   self.id if self.id else 0,
                                                                                                                   self.cluster_id if self.cluster_id else 0 ,
+                                                                                                                  self.status,
                                                                                                                   self.uuid, self.workdir, self.remote_workdir,)
 
 def connect(host):

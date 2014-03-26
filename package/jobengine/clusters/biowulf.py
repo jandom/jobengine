@@ -1,6 +1,5 @@
 
 from jade import Jade
-import paramiko
 from scp import SCPClient
 import jobengine.configuration
 
@@ -13,10 +12,11 @@ class Biowulf(Jade):
     The standard connect() method is overriden. 
     """
     name = "BIOWULF"
+    proxy = None
     hostname = "helix.nih.gov"
     username = "domanskij"
     path = "/data/domanskij"
-    status_command= "qstat -l lcp".split()
+    status_all_command= "/usr/local/pbs/bin/qstat -u {}".format(username)
 
     def parse_qsub(self, stdout):
         lines = stdout.readlines()
@@ -44,12 +44,6 @@ class Biowulf(Jade):
             return False 
         return True
     
-    def get_status_all(self, shell):
-        (stdin, stdout, stderr) = shell.exec_command("/usr/local/pbs/bin/qstat -u {}".format(self.username))
-        stdout = stdout.readlines()
-        stderr = stderr.readlines()
-        return "".join(stdout)
-        
     def get_status(self, shell, job):
         (stdin, stdout, stderr) = shell.exec_command("/usr/local/pbs/bin/qstat {}".format(job.cluster_id))
         stdout = stdout.readlines()
@@ -61,21 +55,7 @@ class Biowulf(Jade):
         assert(len(stdout)==3)
         status_code = stdout[-1].split()[-2]
         return str(status_code)
-    
-    def connect(self):
-        dsa_key = paramiko.DSSKey.from_private_key_file(jobengine.configuration.private_key_file)
-        
-        conf = paramiko.SSHConfig()
-        conf.parse(open('/home/jandom/.ssh/config'))
-        host = conf.lookup('biowulf')
-
-        proxy = paramiko.ProxyCommand(host['proxycommand'])
-        
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(host["hostname"], username=host["user"], pkey=dsa_key, sock=proxy)
-
-        return client
+      
     def do_submit(self, shell, remote_workdir, **kwargs):
         print kwargs.get('nodes', 1)
         (stdin, stdout, stderr) = shell.exec_command("cd {}; /usr/local/pbs/bin/qsub -q lcp -l nodes={} submit.sh".format(remote_workdir, kwargs.get('nodes', 1)))
@@ -108,10 +88,11 @@ cd ${PBS_O_WORKDIR}
 np=%d
 
 if [ -f plumed.dat ]; then
-  options="-v -plumed -maxh 24"
+  options="-v -maxh 24 -resethway  -plumed -rdd 1.7"
   touch HILLS
+  touch bias.dat
 else
-  options="-v -maxh 24"
+  options="-v -maxh 24 -resethway -rdd 1.7"
 fi
 
 echo "Running: $mpirun -np $np $application $options"

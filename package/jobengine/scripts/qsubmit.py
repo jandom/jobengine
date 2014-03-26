@@ -32,14 +32,14 @@ def main():
     # Restore an existing workdir
     if args.workdir:
         job = get_job_from_workdir(session, args.workdir)
-        #if job.status != "Q": return
-        #if job.status != "R": return
-        cluster, shell = Clusters().get_cluster(job.cluster_name)
         print job
+        if job.status == "Q" or job.status == "R" or job.status == "PD": 
+            print("Job already running or queued")
+            return        
+        cluster, shell = Clusters().get_cluster(job.cluster_name)
         job = cluster.submit(shell, job)
-        print job.status
         status = cluster.get_status(shell, job)
-        print job.status 
+        job.status = status
         session.add(job)
         session.commit()       
     # Create a brand-new workdir    
