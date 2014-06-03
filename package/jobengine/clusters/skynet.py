@@ -1,7 +1,7 @@
 
-from jade import Jade
+from pbscluster import PBSCluster
 
-class Skynet(Jade):
+class Skynet(PBSCluster):
     name = "SKYNET"
     hostname ="skynet.oerc.ox.ac.uk"
     script = """#PBS -V

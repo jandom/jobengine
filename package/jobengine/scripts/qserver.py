@@ -9,8 +9,7 @@ from jobengine.core import Job, test_workdir
 from jobengine.clusters import Clusters
 from jobengine.configuration import engine_file
 
-import argparse
-import subprocess
+import argparse,  subprocess, os
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -30,13 +29,14 @@ def process_resubmit(args):
         jobs = [job for job in session.query(Job).order_by(Job.id)]
         for job in jobs :
             if job.status == "S": continue
-            if "biowulf" != job.cluster_name.lower(): continue
             if args.cluster and not args.cluster == job.cluster_name.lower(): continue
             print job            
             cluster, shell = clusters.get_cluster(job.cluster_name)
             status = cluster.get_status(shell, job)
             job.status = status 
             print("Before:",status, job.id)
+            if os.path.exists("{}/confout.gro".format(job.local_workdir)):
+                job.status = "S"
             if status == "C":
                 job = cluster.submit(shell, job)
                 print("After:", job.status, job.id)
@@ -55,14 +55,12 @@ def process_fetch(args):
     while True:
         print("Fetching")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
-        for job in jobs :
-            cluster, shell = clusters.get_cluster(job.cluster_name)
-            if job.status == "S": continue
-            #print(job.status, job.name, job.id, job.workdir)
-            #if "translocon" in job.name: continue
-            print(job)
+        for i, job in enumerate(jobs) :
             if job.cluster_name.lower() != "biowulf": continue
+            print(i+1, len(jobs), job)
+            cluster, shell = clusters.get_cluster(job.cluster_name)
             rsync_return_code = cluster.pull(shell, job)   
+            continue
             assert(rsync_return_code==0)
             chemtime, target_chemtime = test_workdir(job.workdir)
             print chemtime, target_chemtime 

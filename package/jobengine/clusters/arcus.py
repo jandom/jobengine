@@ -6,7 +6,7 @@ class Arcus(Cluster):
     hostname ="arcus-gpu.oerc.ox.ac.uk"
     proxy = "clathrin"
     username = "jdomanski"
-    path = "/data/sbcb-membr/jdomanski"
+    path = "/data/sbcb-membr/jdomanski/"
     status_command = "squeue -u jdomanski"
     status_all_command = "squeue -u jdomanski"
     script = """#!/bin/bash
@@ -52,8 +52,8 @@ fi
         (stdin, stdout, stderr) = shell.exec_command("cd {}; sbatch {}/submit.sh".format(remote_workdir, remote_workdir))  
         return stdout.readlines()
         
-    def submit(self, shell, job):        
-        result = self.do_submit(shell, job.remote_workdir)
+    def submit(self, shell, job, **kwargs):        
+        result = self.do_submit(shell, job.remote_workdir, **kwargs)
         #"Submitted batch job 2639"
         assert(len(result) == 1)
         result = result[0]
