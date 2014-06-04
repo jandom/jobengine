@@ -37,9 +37,10 @@ class Cluster(object):
         Pull the data from remote workdir into the local workdir using the
         scp command.
         """
-        
-        cmd = "%s %s@%s:%s/* %s/ " \
-                             % (self._rsync(verbose), self.username, self.hostname, job.remote_workdir,  job.workdir)
+        from os.path import expanduser
+	home = expanduser("~")
+	cmd = "%s %s@%s:%s/* /%s/.lockers/%s/ " \
+                             % (self._rsync(verbose), self.username, self.hostname, job.remote_workdir, home, job.uuid)
         cmd += " --include='*.xtc' --include='*.gro' --include='*HILLS*' --include='*COLVAR*' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
         print cmd
         return subprocess.call(cmd, shell=True)    
@@ -50,8 +51,10 @@ class Cluster(object):
         scp command.
         """
         assert(pattern)
-        cmd = "%s %s/%s %s@%s:%s/  " \
-                             % (self._rsync(verbose), job.workdir, pattern, self.username, self.hostname, job.remote_workdir)
+	from os.path import expanduser
+	home = expanduser("~")
+        cmd = "%s %s/%s %s@%s:%s/.lockers/%s/  " \
+                             % (self._rsync(verbose), home, job.uuid, pattern, self.username, self.hostname, job.remote_workdir)
         #cmd += " --include='*.xtc' --include='*.gro' --include='*HILLS*' --include='*COLVAR*' --include='*.dat'  --include='*.log' --include='*.ndx' --exclude='*.*' "
         if verbose: print(cmd)
         print cmd
@@ -64,7 +67,9 @@ class Cluster(object):
     def connect(self):
         dsa_key = paramiko.DSSKey.from_private_key_file(jobengine.configuration.private_key_file)
         conf = paramiko.SSHConfig()
-        conf.parse(open('/home/jandom/.ssh/config'))
+	from os.path import expanduser
+	home = expanduser("~")
+        conf.parse(open('{}/.ssh/config'.format(home)))
         host = conf.lookup(self.name.lower())
 
         client = paramiko.SSHClient()

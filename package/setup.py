@@ -10,7 +10,7 @@ import glob
 import shutil
 import tempfile
 
-import gromacs, spur, paramiko, scp, sqlalchemy, mdanalysis
+import gromacs, spur, paramiko, scp, sqlalchemy, MDAnalysis
 
 # REQUIREMENTS
 # - spur
@@ -27,7 +27,7 @@ if __name__ == '__main__':
           version           = "alpha",
           packages          = [ 'jobengine',],
           package_dir       = {'jobengine': 'jobengine'},
-          scripts=['jobengine/scripts/qsubmit.py', 'jobengine/scripts/qserver.py'],
+          scripts=glob.glob('jobengine/scripts/*.py'),
           ext_package       = 'jobengine',
           ext_modules       = extensions,
           zip_safe = False,     # as a zipped egg the *.so files are not found (at least in Ubuntu/Linux)

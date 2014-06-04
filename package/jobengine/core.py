@@ -73,7 +73,10 @@ from gromacs.fileformats import MDP
 from MDAnalysis import Universe
 from collections import Counter
 import numpy as np
-def test_workdir(workdir):
+def test_workdir(job):
+    from os.path import expanduser
+    home = expanduser("~")
+    workdir = "{}/.lockers/{}".format(home,job.uuid)
     return test_workdir_contents(os.path.join(workdir, "grompp.mdp"),
                                  os.path.join(workdir, "conf.gro"),
                                  os.path.join(workdir, "traj.xtc"),)

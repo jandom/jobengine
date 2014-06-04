@@ -10,7 +10,7 @@ __all__ = ["Jade", "Biowulf","BiowulfMartini", "Emerald", "Arcus", "Skynet", "Ha
 
 class Clusters(object):
     clusters = {"jade": Jade, "emerald": Emerald, "arcus": Arcus, "hal": Hal, "skynet": Skynet, "biowulf": Biowulf}
-    clusters = {"jade": Jade, "arcus": Arcus, "biowulf": Biowulf, "biowulf-martini": BiowulfMartini, "arcus-gpu": Arcus, "chronos": Chronos}
+    clusters = {"jade": Jade, "arcus": Arcus, "biowulf": Biowulf, "biowulf-martini": BiowulfMartini, "arcus-gpu": Arcus}
     def __init__(self):
         self.__clusters_cache = {}    
     def get_cluster(self, cluster_name, caching=False):

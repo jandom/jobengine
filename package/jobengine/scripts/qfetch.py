@@ -33,7 +33,7 @@ def process_fetch(args):
     rsync_return_code = cluster.pull(shell, job)   
     assert(rsync_return_code==0)
     
-    chemtime, target_chemtime = test_workdir(job.workdir)
+    chemtime, target_chemtime = test_workdir(job)
     print chemtime, target_chemtime 
     # If the simulation hasn't started yet, skip
     if not (chemtime and target_chemtime): return
