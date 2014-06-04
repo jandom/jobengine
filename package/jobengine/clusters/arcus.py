@@ -50,16 +50,16 @@ fi
       
     def do_submit(self, shell, remote_workdir,  **kwargs):
         (stdin, stdout, stderr) = shell.exec_command("cd {}; sbatch {}/submit.sh".format(remote_workdir, remote_workdir))  
-        return stdout.readlines()
+        return stdout.readlines(), stderr.readlines()
         
     def submit(self, shell, job, **kwargs):        
-        result = self.do_submit(shell, job.remote_workdir, **kwargs)
+        out, err = self.do_submit(shell, job.remote_workdir, **kwargs)
         #"Submitted batch job 2639"
-        assert(len(result) == 1)
-        result = result[0]
-        assert("Submitted batch job" in result)
+        assert(len(out) == 1), err
+        out = out[0]
+        assert("Submitted batch job" in out)
         
-        cluster_id = int(result.split()[-1])
+        cluster_id = int(out.split()[-1])
         job.cluster_id = cluster_id
         print cluster_id
         job.status = self.get_status(shell, job)

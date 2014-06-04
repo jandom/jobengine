@@ -41,7 +41,7 @@ class Cluster(object):
 	home = expanduser("~")
 	cmd = "%s %s@%s:%s/* /%s/.lockers/%s/ " \
                              % (self._rsync(verbose), self.username, self.hostname, job.remote_workdir, home, job.uuid)
-        cmd += " --include='*.xtc' --include='*.gro' --include='*HILLS*' --include='*COLVAR*' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
+        cmd += " --include='*.xtc' --include='*.gro' --include='*.mdp' --include='*.sh' --include='*HILLS*' --include='*COLVAR*' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
         print cmd
         return subprocess.call(cmd, shell=True)    
 
