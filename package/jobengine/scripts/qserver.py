@@ -37,7 +37,7 @@ def process_resubmit(args):
             print("Before:",status, job.id)
             if os.path.exists("{}/confout.gro".format(job.local_workdir)):
                 job.status = "S"
-            if status == "C":
+            if job.status == "C":
                 job = cluster.submit(shell, job)
                 print("After:", job.status, job.id)
             session.add(job)

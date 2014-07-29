@@ -155,6 +155,10 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     
     gro = os.path.join(local_dir, "conf.gro")
     shutil.copy(gro, workdir)
+
+    pdb = os.path.join(local_dir, "conf.pdb")
+    if os.path.exists(pdb):
+		shutil.copy(pdb, workdir)
     
     mdp = os.path.join(local_dir, "grompp.mdp")
     if os.path.exists(mdp):
