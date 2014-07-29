@@ -199,8 +199,8 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     
     remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
 
-    result = cluster.do_submit(shell, remote_workdir, nodes=nodes, duration=duration)
-    cluster_id = cluster.parse_qsub(result)
+    out, err = cluster.do_submit(shell, remote_workdir, nodes=nodes, duration=duration)
+    cluster_id = cluster.parse_qsub(out)
     j = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes)
 
     return j        

@@ -59,13 +59,13 @@ class Biowulf(PBSCluster):
     def do_submit(self, shell, remote_workdir, **kwargs):
         print kwargs.get('nodes', 1)
         (stdin, stdout, stderr) = shell.exec_command("cd {}; /usr/local/pbs/bin/qsub -q lcp -l nodes={},walltime={} submit.sh".format(remote_workdir, kwargs.get('nodes', 1), kwargs.get('duration', '24:00:00')))
-        return stdout    
+        return stdout.readlines(), stderr.readlines()  
     def submit(self, shell, job, **kwargs):
         #result = shell.run(["qsub","-q", "lcp", "-l", "nodes=12","%s/submit.sh" % job.remote_workdir], cwd=job.remote_workdir)
         #(stdin, stdout, stderr) = shell.exec_command("cd {}; /usr/local/pbs/bin/qsub -q lcp -l nodes=10 submit.sh".format(job.remote_workdir))
         kwargs["nodes"] = job.nodes
         
-        stdout = self.do_submit(shell, job.remote_workdir, **kwargs)
+        stdout, stderr = self.do_submit(shell, job.remote_workdir, **kwargs)
         cluster_id = self.parse_qsub(stdout)
         job.cluster_id = cluster_id
         job.status = self.get_status(shell, job)
