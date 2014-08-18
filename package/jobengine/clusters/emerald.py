@@ -10,12 +10,12 @@ class Emerald(Cluster):
     #password="password1"
     status_command= "qstat -l emerald".split()
     status_all_command= "qstat -u eisox118 emerald"
-    script = """#BSUB -J {0}
+    script = """#BSUB -J {}
 #BSUB -o %J.log
 #BSUB -e %J.err
-#BSUB -W 24:00
-#BSUB -m emerald3g
-#BSUB -n 1
+#BSUB -W {}
+#BSUB -q emerald-devel
+#BSUB -n {}
 #BSUB -x
 
 module add libfftw/gnu/3.3.2_mpi
@@ -24,21 +24,21 @@ module add gromacs/4.6_mpi
 #cd %s
 
 if [ -f state.cpt ]; then
-  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -cpi -maxh 24
+  mpirun -np {} mdrun_mpi  -v -cpi -maxh 24 # -noconfout -resethway -append 
 else
-  mpirun -np 2 mdrun_mpi  -noconfout -resethway -append -v -maxh 24
+  mpirun -np {} mdrun_mpi  -v -maxh 24 # -noconfout -resethway -append 
 fi
 """
     
-    def parse_qsub(self, result):
-        ids = result.output.split()[1][1:-1], result.output.split()[8][1:-1]
+    def parse_qsub(self, stdout):
+        ids = stdout.split()[1][1:-1], stdout.split()[8][1:-1]
         ids = map(int, ids)
         assert ids[0] == ids[1]
         #print "ids=", ids
         return ids[0]
 
-    def get_script(self, job_name, remote_workdir):
-        return self.script % (job_name, remote_workdir)
+    def get_script(self, job_name, remote_workdir, duration, nodes, processes):
+        return self.script.format(job_name, duration, nodes, remote_workdir, processes, processes)
 
     def job_from_string(self, lines):
         lines = lines.split("\n")  
@@ -58,9 +58,17 @@ fi
         j.stderr = stderr    
         return j
 
-    def submit(self, shell, job):
-        result = shell.run(["bsub" ," < ","%s/submit.sh" % job.remote_workdir], cwd=job.remote_workdir)
-        cluster_id = self.parse_qsub(result)
+    def do_submit(self, shell, remote_workdir, nodes, duration):
+        (stdin, stdout, stderr)  = shell.exec_command("bsub" ," < ","%s/submit.sh" % remote_workdir)
+        print stdin
+        print stdout
+        print stderr
+        print stdout.readlines()
+        print stderr.readlines()
+        
+        return stdout.readlines(), stderr.readlines()
+
+        cluster_id = self.parse_qsub(stdout)
         job.cluster_id = cluster_id
         job.status = self.get_status(shell, job)
         return job

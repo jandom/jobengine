@@ -26,12 +26,14 @@ def process_resubmit(args):
     
     if True:
         print("Checking")
-        jobs = [job for job in session.query(Job).order_by(Job.id)]
+        jobs = [job for job in session.query(Job).order_by(Job.id) if job.status != "S"]
+        print("Found {} jobs to checkon".format(len(jobs)))
         for job in jobs :
             if job.status == "S": continue
             if args.cluster and not args.cluster == job.cluster_name.lower(): continue
             print job            
             cluster, shell = clusters.get_cluster(job.cluster_name)
+            if not shell: continue
             status = cluster.get_status(shell, job)
             job.status = status 
             print("Before:",status, job.id)
@@ -56,9 +58,11 @@ def process_fetch(args):
         print("Fetching")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
         for i, job in enumerate(jobs) :
-            if job.cluster_name.lower() != "biowulf": continue
+            if job.status == "S": continue
+            #if job.cluster_name.lower() != "biowulf": continue
             print(i+1, len(jobs), job)
             cluster, shell = clusters.get_cluster(job.cluster_name)
+            if not shell: continue
             rsync_return_code = cluster.pull(shell, job)   
             continue
             assert(rsync_return_code==0)
