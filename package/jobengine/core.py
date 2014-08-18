@@ -168,6 +168,10 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     plumed = os.path.join(local_dir, "plumed.dat")
     if os.path.exists(plumed): shutil.copy(plumed, workdir) 
 
+    hills = os.path.join(local_dir, "HILLS")
+    if os.path.exists(hills): shutil.copy(hills, workdir) 
+
+
     import distutils.core
     
     # Rob's umbrella sampling code
@@ -202,8 +206,9 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
         return None
     
     remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
-
+    print remote_workdir
     out, err = cluster.do_submit(shell, remote_workdir, nodes=nodes, duration=duration)
+    print out, err
     cluster_id = cluster.parse_qsub(out)
     j = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes)
 

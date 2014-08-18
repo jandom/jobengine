@@ -18,11 +18,12 @@ class Biowulf(PBSCluster):
     path = "/data/domanskij"
     status_all_command= "/usr/local/pbs/bin/qstat -u {}".format(username)
 
-    def parse_qsub(self, stdout):
-        lines = stdout.readlines()
-        assert(len(lines)==1)
-        cluster_id = int(lines[0].split(".biobos")[0])
-        return cluster_id      
+    def parse_qsub(self, lines):
+		#lines = stdout.readlines()
+		print lines	
+		assert(len(lines)==1)
+		cluster_id = int(lines[0].split(".biobos")[0])
+		return cluster_id      
 
     def get_script(self, *args):
         return self.script % (args[0][:15], args[2], args[3]*args[4])
