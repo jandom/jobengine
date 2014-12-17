@@ -4,7 +4,7 @@ from jobengine.clusters import Emerald, Jade
 import configuration
 import spur
 import uuid
-import os
+import os, glob
 import shutil
 #shell = spur.SshShell(hostname="localhost", username="bob", password="password1")
 
@@ -139,6 +139,11 @@ def get_job_from_workdir(session, workdir):
     job = jobs[0]    
     return job
 
+def _copy(pattern, workdir):
+	for f in glob.glob(pattern):
+		if os.path.exists(f):
+			shutil.copy(f, workdir)
+
 def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1, processes=16, script=None):
     assert os.path.isfile(tpr)
     assert os.path.splitext(tpr)[1] == ".tpr"
@@ -153,24 +158,12 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     local_dir = os.path.dirname(tpr) # FIXME this should be stored
     shutil.copy(tpr, workdir)
     
-    gro = os.path.join(local_dir, "conf.gro")
-    shutil.copy(gro, workdir)
-
-    pdb = os.path.join(local_dir, "conf.pdb")
-    if os.path.exists(pdb):
-		shutil.copy(pdb, workdir)
-    
-    mdp = os.path.join(local_dir, "grompp.mdp")
-    if os.path.exists(mdp):
-        shutil.copy(mdp, workdir)
-    
-    # Support plumed.dat
-    plumed = os.path.join(local_dir, "plumed.dat")
-    if os.path.exists(plumed): shutil.copy(plumed, workdir) 
-
-    hills = os.path.join(local_dir, "HILLS")
-    if os.path.exists(hills): shutil.copy(hills, workdir) 
-
+    _copy("topol*.tpr", workdir)
+    _copy("plumed.dat*", workdir)
+    _copy("HILLS*", workdir)
+    _copy("*.mdp", workdir)
+    _copy("*.pdb", workdir)
+    _copy("*.gro", workdir)
 
     import distutils.core
     
@@ -187,7 +180,7 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     copy_to_locker(local_dir, "qvt")
     copy_to_locker(local_dir, "mdp")
     
-    print nodes, processes
+    print nodes, processes, id0
     
     # Use a cluster-specific submit.sh script or not
     if not script:
