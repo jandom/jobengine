@@ -41,7 +41,7 @@ class Cluster(object):
 	home = expanduser("~")
 	cmd = "%s %s@%s:%s/* /%s/.lockers/%s/ " \
                              % (self._rsync(verbose), self.username, self.hostname, job.remote_workdir, home, job.uuid)
-        cmd += " --include='*.xtc' --include='*.gro' --include='*.mdp' --include='*.sh' --include='*HILLS*' --include='*COLVAR*' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
+        cmd += " --include='*.xtc' --include='*.trr' --include='*.gro' --include='*.mdp' --include='*.sh' --include='*HILLS*' --include='*COLVAR*' --include='*.cpt' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
         print cmd
         return subprocess.call(cmd, shell=True)    
 
@@ -50,19 +50,27 @@ class Cluster(object):
         Pull the data from remote workdir into the local workdir using the
         scp command.
         """
-        assert(pattern)
+        #assert(pattern)
 	from os.path import expanduser
 	home = expanduser("~")
-        cmd = "%s %s/%s %s@%s:%s/.lockers/%s/  " \
-                             % (self._rsync(verbose), home, job.uuid, pattern, self.username, self.hostname, job.remote_workdir)
+        cmd = "%s ~/.lockers/%s/* %s@%s:~/.lockers/%s  " \
+                             % (self._rsync(verbose), job.uuid, self.username, self.hostname, job.uuid)
         #cmd += " --include='*.xtc' --include='*.gro' --include='*HILLS*' --include='*COLVAR*' --include='*.dat'  --include='*.log' --include='*.ndx' --exclude='*.*' "
         if verbose: print(cmd)
         print cmd
         return subprocess.call(cmd, shell=True)    
     
+    def delete(self, shell, job):
+        cmd = "mv ~/.lockers/{} ~/.trash".format(job.uuid)
+        print cmd
+        (stdin, stdout, stderr) = shell.exec_command(cmd)
+        stdout = stdout.readlines()
+        stderr = stderr.readlines()
+        print stdout, stderr
+        return 0
+
     def cancel(self, shell, cluster_id):
         pass
-    delete = cancel
 
     def connect(self):
         dsa_key = paramiko.DSSKey.from_private_key_file(jobengine.configuration.private_key_file)

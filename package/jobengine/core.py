@@ -174,6 +174,7 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
             os.mkdir("{}/{}".format(workdir, dirname)) 
             distutils.dir_util.copy_tree(dir, "{}/{}".format(workdir, dirname))
     
+    
     copy_to_locker(local_dir, "tpr")
     copy_to_locker(local_dir, "tprs")
     copy_to_locker(local_dir, "qij")

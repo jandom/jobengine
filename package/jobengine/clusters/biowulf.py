@@ -40,13 +40,15 @@ class Biowulf(PBSCluster):
         status = self.get_status(shell, job)
         if status == "R":
           cmd = "/usr/local/pbs/bin/qdel {}".format(str(job.cluster_id))
+          print cmd
           (stdin, stdout, stderr) = shell.exec_command(cmd)
+          print stdout.readlines(), stderr.readlines()
           if stdout:
             return False 
         return True
     
     def get_status(self, shell, job):
-        (stdin, stdout, stderr) = shell.exec_command("/usr/local/pbs/bin/qstat {}".format(job.cluster_id))
+        (stdin, stdout, stderr) = shell.exec_command("/usr/local/pbs/bin/qstat {}.biobos".format(job.cluster_id))
         stdout = stdout.readlines()
         stderr = stderr.readlines()
 

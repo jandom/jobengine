@@ -1,8 +1,8 @@
 
-
-from slurmcluster import SlurmCluster
+from base import Cluster
 import spur
-class Arcus(SlurmCluster):
+
+class SlurmCluster(Cluster):
     name = "ARCUS-GPU"
     hostname ="arcus-gpu.oerc.ox.ac.uk"
     proxy = "clathrin"

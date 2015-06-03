@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument("--topol", default="topol.tpr")
     parser.add_argument("--jobname", default="workdir")
     parser.add_argument("--cluster", default="arcus-gpu")
-    parser.add_argument("--workdir", default=None)
+    parser.add_argument("--workdir", "-w", default=None)
     parser.add_argument("--duration", default="24:00:00")
     parser.add_argument("--nodes", type=int, default=1)
     parser.add_argument("--processes", type=int, default=16)

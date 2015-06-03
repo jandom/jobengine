@@ -14,7 +14,7 @@ import argparse,  subprocess, os
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--action", default="resubmit")
-    parser.add_argument("--cluster", default=None)
+    parser.add_argument("--cluster", default="biowulf")
     return parser.parse_args()
 
 def process_resubmit(args):
@@ -57,9 +57,10 @@ def process_fetch(args):
     while True:
         print("Fetching")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
+	print(dir(jobs[0]))
         for i, job in enumerate(jobs) :
-            if job.status == "S": continue
-            #if job.cluster_name.lower() != "biowulf": continue
+            if job.status == "S": continue	
+            if job.cluster_name.lower() != args.cluster.lower(): continue
             print(i+1, len(jobs), job)
             cluster, shell = clusters.get_cluster(job.cluster_name)
             if not shell: continue

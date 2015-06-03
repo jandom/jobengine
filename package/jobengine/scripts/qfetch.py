@@ -14,17 +14,20 @@ import subprocess
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--workdir", default="workdir")
+    parser.add_argument("--workdir", "-w", default=["workdir"], nargs="+")
     return parser.parse_args()
 
 def process_fetch(args):
+    for w in args.workdir: do_process_fetch(w)
+
+def do_process_fetch(workdir, test=False):
 
     engine = create_engine(engine_file)
     Session = sessionmaker(bind=engine)
     session = Session()
     clusters = Clusters()
     
-    job = get_job_from_workdir(session, args.workdir)
+    job = get_job_from_workdir(session, workdir)
     cluster, shell = clusters.get_cluster(job.cluster_name)
 
     print(job)    
@@ -33,15 +36,18 @@ def process_fetch(args):
     rsync_return_code = cluster.pull(shell, job)   
     assert(rsync_return_code==0)
     
-    chemtime, target_chemtime = test_workdir(job)
-    print chemtime, target_chemtime 
-    # If the simulation hasn't started yet, skip
-    if not (chemtime and target_chemtime): return
-    # If the target chemtime hasn't been achieved, don't stop
-    if not (chemtime == target_chemtime): return
+    if test:
+	chemtime, target_chemtime = test_workdir(job)
+	print chemtime, target_chemtime 
+	# If the simulation hasn't started yet, skip
+	if not (chemtime and target_chemtime): return
+	# If the target chemtime hasn't been achieved, don't stop
+	if not (chemtime == target_chemtime): return
     # Stop the simulation if complete
+    
+    return
     if job.status == "S": return
-    cluster.delete(shell, job.cluster_id)
+    cluster.cancel(shell, job.cluster_id)
     print("Stopping", job)
     job.status = "S" # Stopped
     session.add(job)

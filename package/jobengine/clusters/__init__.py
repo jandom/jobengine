@@ -5,12 +5,14 @@ from arcus import Arcus
 from hal import Hal
 from skynet import Skynet
 from biowulf import Biowulf, BiowulfMartini
+from biowulf2 import Biowulf2
+from biowulf2ib import Biowulf2IB
 
-__all__ = ["Jade", "Biowulf","BiowulfMartini", "Emerald", "Arcus", "Skynet", "Hal", "Clusters"]
+__all__ = ["Jade", "Biowulf", "Biowulf2", "Biowulf2IB","BiowulfMartini", "Emerald", "Arcus", "Skynet", "Hal", "Clusters"]
 
 class Clusters(object):
-    clusters = {"jade": Jade, "emerald": Emerald, "arcus": Arcus, "hal": Hal, "skynet": Skynet, "biowulf": Biowulf}
-    clusters = {"jade": Jade, "arcus": Arcus, "biowulf": Biowulf, "biowulf-martini": BiowulfMartini, "arcus-gpu": Arcus, "emerald": Emerald}
+    
+    clusters = {"jade": Jade, "arcus": Arcus, "biowulf": Biowulf, "biowulf-martini": BiowulfMartini, "biowulf2": Biowulf2, "biowulf2ib": Biowulf2IB, "arcus-gpu": Arcus, "emerald": Emerald}
     def __init__(self):
         self.__clusters_cache = {}    
     def get_cluster(self, cluster_name, caching=False):

@@ -2,21 +2,22 @@
 
 from slurmcluster import SlurmCluster
 import spur
-class Arcus(SlurmCluster):
-    name = "ARCUS-GPU"
-    hostname ="arcus-gpu.oerc.ox.ac.uk"
-    proxy = "clathrin"
-    username = "jdomanski"
-    path = "/data/sbcb-membr/jdomanski/"
-    status_command = "squeue -u jdomanski"
-    status_all_command = "squeue -u jdomanski"
+class Biowulf2(SlurmCluster):
+    name = "BIOWULF2"
+    proxy = None
+    hostname = "helix.nih.gov"
+    username = "domanskij"
+    path = "/data/domanskij"
+
+    status_command = "squeue -u domanskij"
+    status_all_command = "squeue -u domanskij"
     script = """#!/bin/bash
 #SBATCH --job-name=%s
 #SBATCH --time=%s
-#SBATCH --partition=k20
-#SBATCH --nodes=1
-#SBATCH --gres=gpu:1
-#SBATCH --ntasks-per-node=1
+#SBATCH --partition=ibfdr
+#SBATCH --ntasks=16
+#SBATCH --exclusive
+#SBATCH --ntasks-per-core=1
 
 set -e
 
@@ -27,10 +28,10 @@ else
 fi
 """
     def parse_qsub(self, result):
+        print "result", result
         assert(len(result)==1)
         result = result[0]
-        assert "Submitted batch job " in result
-        return int(result.replace("Submitted batch job ", ""))
+        return int(result)
 
         
     def get_status(self, shell, job):
@@ -50,17 +51,14 @@ fi
         return str(st)   
       
     def do_submit(self, shell, remote_workdir,  **kwargs):
-        (stdin, stdout, stderr) = shell.exec_command("cd {}; sbatch {}/submit.sh".format(remote_workdir, remote_workdir))  
+        (stdin, stdout, stderr) = shell.exec_command("cd {}; sbatch --partition=norm --job-name=gmx  --nodes={} --exclusive --ntasks-per-node=16  --time={} {}/submit.sh".format(remote_workdir, kwargs.get('nodes', 1), kwargs.get('duration', '24:00:00'), remote_workdir))  
         return stdout.readlines(), stderr.readlines()
         
     def submit(self, shell, job, **kwargs):        
+	kwargs["nodes"] = job.nodes 
         out, err = self.do_submit(shell, job.remote_workdir, **kwargs)
-        #"Submitted batch job 2639"
-        assert(len(out) == 1), err
-        out = out[0]
-        assert("Submitted batch job" in out)
         
-        cluster_id = int(out.split()[-1])
+        cluster_id = int(out[0])
         job.cluster_id = cluster_id
         print cluster_id
         job.status = self.get_status(shell, job)
