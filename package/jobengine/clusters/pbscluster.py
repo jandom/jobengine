@@ -1,36 +1,11 @@
-import spur
+
 from base import Cluster
-import paramiko
-from scp import SCPClient
-import jobengine.configuration
-from xml.dom import minidom
     
 class PBSCluster(Cluster):
-    name = "JADE"
-    proxy = "clathrin"
-    hostname ="jade.oerc.ox.ac.uk"
-    username = "jdomanski"
-    path = "/data/sbcb-membr/jdomanski"
     status_command = "qstat -x"
-    status_all_command = "qstat -u jdomanski"
-    script = """#PBS -V
-#PBS -N %s
-#PBS -l walltime=%s
-#PBS -l nodes=1:ppn=3
-#PBS -m bea
-
-module purge
-module load gromacs/4.6__single
-cd $PBS_O_WORKDIR
-export MPI_NPROCS=$(wc -l $PBS_NODEFILE | awk '{print $1}')
-export OMP_NUM_THREADS=3
-
-if [ -f state.cpt ]; then
-  mpirun -np 1 mdrun_mpi  -resethway -append -v -cpi -maxh 24
-else
-  mpirun -np 1 mdrun_mpi  -resethway -append -v -maxh 24
-fi
-"""
+    status_all_command = "qstat"
+    submit_command = "qsub"
+    cancel_command = "qdel"
 
     def parse_qsub(self, stdout):
         lines = stdout.readlines()

@@ -27,9 +27,9 @@ class Clusters(object):
         if caching and self._cache.has_key(cluster_name):
             return self._cache[cluster_name]
         # check if we have the cluster at all
-        if not cluster_name in self.clusters:
+        if not cluster_name in clusters:
             return None, None
-        cluster = self.clusters[cluster_name]
+        cluster = clusters[cluster_name]
         
         cluster = cluster()
         shell = cluster.connect()

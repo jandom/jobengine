@@ -37,6 +37,7 @@ def main():
         actual, desired = job.status, cluster.get_status(shell, job)
         print "actual =", actual, "desired =", desired
         if actual == desired : continue
+        continue
         print "Updating"
         job.status = desired
         print job.status 

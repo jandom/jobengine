@@ -1,5 +1,5 @@
 
-import configuration
+
 import spur
 import uuid
 import os, glob

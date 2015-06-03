@@ -1,7 +1,7 @@
 
 import subprocess
 import spur
-import jobengine.configuration
+from jobengine.configuration import config
 import paramiko
 
 class Cluster(object):
@@ -17,20 +17,10 @@ class Cluster(object):
       
     def _rsync(self, verbose):
         verbose=True
-        return "/usr/bin/rsync -e '{proxy}' {verbose} -a --compress --timeout=30".format(**{"proxy": ("ssh -q {} ssh".format(self.proxy) if self.proxy else "ssh -q"), 
-                                                                                            "verbose": ('-v  --progress' if verbose else '')})
-      
-    def test_pull(self, shell, remote_file, local_file, verbose=False):
-        cmd = "%s %s@%s:%s %s"  \
-                             % (self._rsync(verbose), self.username, self.hostname, remote_file, local_file)        
-        print cmd
-        return subprocess.call(cmd, shell=True)
-          
-    def test_push(self, shell, local_file, remote_file, verbose=False):
-        cmd = "%s %s %s@%s:%s" \
-                             % (self._rsync(verbose), local_file, self.username, self.hostname, remote_file, )
-        print cmd
-        return subprocess.call(cmd, shell=True)
+        return "/usr/bin/rsync -e '{proxy}' {verbose} {flags}".format(**{"proxy": ("ssh -q {} ssh".format(self.proxy) if self.proxy else "ssh -q"), 
+                                                                         "verbose": ('-v  --progress' if verbose else ''),
+                                                                         "flags": config.rsync.flags,
+                                                                         })
             
     def pull(self, shell, job, verbose=False):
         """
@@ -70,29 +60,22 @@ class Cluster(object):
         return 0
 
     def cancel(self, shell, cluster_id):
+        raise NotImplementedError
         pass
 
     def connect(self):
-        dsa_key = paramiko.DSSKey.from_private_key_file(jobengine.configuration.private_key_file)
-        conf = paramiko.SSHConfig()
-        from os.path import expanduser
-        home = expanduser("~")
-        conf.parse(open('{}/.ssh/config'.format(home)))
-        host = conf.lookup(self.name.lower())
+
+        host = config.ssh.lookup(self.name.lower())
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         if 'proxycommand' in host:
-            
             proxy = paramiko.ProxyCommand(host['proxycommand'])
-            ret = client.connect(host["hostname"], username=host["user"], pkey=dsa_key, sock=proxy, timeout=300)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=config.dsa_key, sock=proxy, timeout=300)
         else:
-            ret = client.connect(host["hostname"], username=host["user"], pkey=dsa_key, timeout=300)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=config.dsa_key, timeout=300)
         return client
 
     def get_status_all(self, shell):
-        #print self.status_all_command
-        (stdin, stdout, stderr) = shell.exec_command(self.status_all_command)
-        stdout = stdout.readlines()
-        stderr = stderr.readlines()
-        return "".join(stdout)
+        raise NotImplementedError
+        pass
