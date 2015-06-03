@@ -19,11 +19,9 @@ class Biowulf(PBSCluster):
     status_all_command= "/usr/local/pbs/bin/qstat -u {}".format(username)
 
     def parse_qsub(self, lines):
-		#lines = stdout.readlines()
-		print lines	
-		assert(len(lines)==1)
-		cluster_id = int(lines[0].split(".biobos")[0])
-		return cluster_id      
+        assert(len(lines)==1)
+        cluster_id = int(lines[0].split(".biobos")[0])
+        return cluster_id      
 
     def get_script(self, *args):
         return self.script % (args[0][:15], args[2], args[3]*args[4])
@@ -73,76 +71,3 @@ class Biowulf(PBSCluster):
         job.cluster_id = cluster_id
         job.status = self.get_status(shell, job)
         return job 
-    script = """#!/bin/bash
-
-#PBS -N "%s"
-
-##PBS -l nodes=1:c24,walltime=%s
-
-#source /usr/local/gromacs/bin/GMXRC
-
-module load openmpi/1.6.4/intel/ib
-module load gromacs/4.5.5+plumed-ib
-
-mpirun=`which mpirun`
-application=`which mdrun_mpi`
-
-cd ${PBS_O_WORKDIR}
-
-np=%d
-
-if [ -f plumed.dat ]; then
-  options="-v -maxh 24 -resethway  -plumed "
-  touch HILLS
-  touch bias.dat
-else
-  options="-v -maxh 24 -resethway "
-fi
-
-echo "Running: $mpirun -np $np $application $options"
-
-if [ -f state.cpt ]; then
-  $mpirun -machinefile $PBS_NODEFILE -n $np $application $options -cpi
-else
-  $mpirun -machinefile $PBS_NODEFILE -n $np $application $options
-fi
-    
-"""
-
-class BiowulfMartini(Biowulf):
-    script = """#!/bin/bash
-
-#PBS -N "%s"
-
-##PBS -l nodes=1:c24,walltime=%s
-
-#source /usr/local/gromacs/bin/GMXRC
-
-module load openmpi/1.6.4/intel/ib
-module load gromacs/4.5.5+plumed-ib
-
-mpirun=`which mpirun`
-application=`which mdrun_mpi`
-
-cd ${PBS_O_WORKDIR}
-
-np=%d
-
-if [ -f plumed.dat ]; then
-  options="-v -maxh 24 -resethway  -plumed -rdd 1.7"
-  touch HILLS
-  touch bias.dat
-else
-  options="-v -maxh 24 -resethway -rdd 1.7"
-fi
-
-echo "Running: $mpirun -np $np $application $options"
-
-if [ -f state.cpt ]; then
-  $mpirun -machinefile $PBS_NODEFILE -n $np $application $options -cpi
-else
-  $mpirun -machinefile $PBS_NODEFILE -n $np $application $options
-fi
-    
-"""  
-        

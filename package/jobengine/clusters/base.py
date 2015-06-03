@@ -38,8 +38,8 @@ class Cluster(object):
         scp command.
         """
         from os.path import expanduser
-	home = expanduser("~")
-	cmd = "%s %s@%s:%s/* /%s/.lockers/%s/ " \
+        home = expanduser("~")
+        cmd = "%s %s@%s:%s/* /%s/.lockers/%s/ " \
                              % (self._rsync(verbose), self.username, self.hostname, job.remote_workdir, home, job.uuid)
         cmd += " --include='*.xtc' --include='*.trr' --include='*.gro' --include='*.mdp' --include='*.sh' --include='*HILLS*' --include='*COLVAR*' --include='*.cpt' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
         print cmd
@@ -51,8 +51,8 @@ class Cluster(object):
         scp command.
         """
         #assert(pattern)
-	from os.path import expanduser
-	home = expanduser("~")
+        from os.path import expanduser
+        home = expanduser("~")
         cmd = "%s ~/.lockers/%s/* %s@%s:~/.lockers/%s  " \
                              % (self._rsync(verbose), job.uuid, self.username, self.hostname, job.uuid)
         #cmd += " --include='*.xtc' --include='*.gro' --include='*HILLS*' --include='*COLVAR*' --include='*.dat'  --include='*.log' --include='*.ndx' --exclude='*.*' "
@@ -75,8 +75,8 @@ class Cluster(object):
     def connect(self):
         dsa_key = paramiko.DSSKey.from_private_key_file(jobengine.configuration.private_key_file)
         conf = paramiko.SSHConfig()
-	from os.path import expanduser
-	home = expanduser("~")
+        from os.path import expanduser
+        home = expanduser("~")
         conf.parse(open('{}/.ssh/config'.format(home)))
         host = conf.lookup(self.name.lower())
 

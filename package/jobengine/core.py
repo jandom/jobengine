@@ -1,5 +1,3 @@
-from jobengine.clusters import Emerald, Jade
-
 
 import configuration
 import spur
