@@ -18,17 +18,21 @@ the engineers who built the original jobengine.
 Aim
 ---
 
-Saving time. Researchers loooovveee to upload and download their jobs to clusters. 
-This sucks and is tedious.
+Save time, avoid manual labour. 
 
 Advantages
 ----------
 
-* send simulations to different clusters, seemlessly, from your workstation
-* avoid rsyncing your simulation data from clusters by hand (done in background automatically)
-* re-arrange your directory structure without breaking the place where data is stored
-* store mete-data about your simulations (current chemical time, target chemical time)
-* makes backing up really, really easy (single location to syncronize)
+* use different clusters
+    learn once, and manage your jobs accross multiple computing clusters
+* automatically download results
+    use a cron job to fetch data from clusturs
+* modify your directory structure
+    no more worries about moving/renaming directories on your local machine
+* distributed computing
+    works with any submission system
+* easy backup
+    research data is stored in one centralized location, ~/.lockers
 
 Limitations
 ----------- 
