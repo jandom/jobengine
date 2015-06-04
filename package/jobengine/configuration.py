@@ -16,10 +16,10 @@ class Struct:
     return '{%s}' % str(', '.join('%s : %s' % (k, repr(v)) for
       (k, v) in self.__dict__.iteritems()))
 
+
 private_key_file=os.path.join(os.environ["HOME"], ".ssh", "id_dsa")
 lockers = os.path.join(os.environ["HOME"],".lockers")
 engine_file = 'sqlite:///%s/jobengine.sql' % lockers	  		
-
 
 if not os.path.exists(private_key_file):
 	raise IOError("Private key file doesn't exist at '{}'".format(private_key_file))

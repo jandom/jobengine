@@ -12,6 +12,19 @@ class Cluster(object):
     path = None
     def __repr__(self):
         return "<Cluster '%s' %s@%s:%s>" % (self.name, self.username, self.hostname, self.path)
+
+    def do_submit(self, shell, job,  **kwargs):
+        raise NotImplementedError
+
+    def submit(self, shell, job, **kwargs):        
+        raise NotImplementedError
+
+    def do_submit(self, shell, job,  **kwargs):
+        raise NotImplementedError
+                
+    def submit(self, shell, job, **kwargs):        
+        raise NotImplementedError
+
     def get_script(self, *args):
         return self.script % (args[0], args[2])
       

@@ -6,15 +6,22 @@ class SlurmCluster(Cluster):
     status_command = "squeue --job"
     submit_command = "sbatch"
     cancel_command = "scancel"
-     
-    def do_submit(self, shell, remote_workdir,  **kwargs):
-        (stdin, stdout, stderr) = shell.exec_command("cd {}; sbatch {}/submit.sh".format(remote_workdir, remote_workdir))  
-        return stdout.readlines(), stderr.readlines()
+
+    def get_status(self, shell, job):
+        if not job.cluster_id: return None
+        cmd = "{} {}".format(self.status_command, job.cluster_id)
+        print("cmd=",cmd)
+        (stdin, stdout, stderr) = shell.exec_command(cmd)
+        stdout, stderr = stdout.readlines(), stderr.readlines()
+        
+        assert(len(stderr) == 0), stderr
+        assert(len(stdout) == 2), stdout
+        st = stdout[1].split()[4]
+        return st    
         
     def cancel(self, shell, job):
-        status = self.get_status(shell, job)
-        if status == "R" or status == "PD": # slurm status codes: Running and Pending
-          (stdin, stdout, stderr) = shell.exec_command("scancel {}".format(str(job.cluster_id)))
-          if stdout.readlines():
-            return False 
+        #status = self.get_status(shell, job)
+        (stdin, stdout, stderr) = shell.exec_command("{} {}".format(self.cancel_command, job.cluster_id))
+        stdout, stderr = stdout.readlines(), stderr.readlines()
+        print("stdout=",stdout, "stderr=",stderr)
         return True
