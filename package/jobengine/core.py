@@ -12,6 +12,7 @@ from scp import SCPClient, SCPException
 # SQAlchemy-related
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float
+from . import configuration
 Base = declarative_base()
 
 class Job(Base):
@@ -52,7 +53,7 @@ class Job(Base):
 
 def connect(host):
     
-    kwargs = {"password":host.password} if hasattr(host, "password") else {"private_key_file":configuration.private_key_file}
+    kwargs = {"password":host.password} if hasattr(host, "password") else {"private_key_file":configuration.config.private_key_file}
     
     shell = spur.SshShell(
         hostname=host.hostname,
@@ -105,10 +106,10 @@ def test_workdir_contents(mdp_file="grompp.mdp", conf_file="conf.gro", traj_file
 
 def submit(tpr, cluster):
     assert os.path.isfile(tpr)
-    if not os.path.exists(configuration.lockers): os.mkdir(configuration.lockers)
+    if not os.path.exists(configuration.config.lockers): os.mkdir(configuration.config.lockers)
     assert not os.path.exists("workdir")
     id0 = str(uuid.uuid4())
-    workdir = "%s/%s" % (configuration.lockers, id0)
+    workdir = "%s/%s" % (configuration.config.lockers, id0)
     os.mkdir(workdir)
     os.symlink(workdir, "workdir")
     shutil.copy(tpr, workdir)
@@ -145,12 +146,12 @@ def _copy(pattern, workdir):
 def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1, processes=16, script=None):
     assert os.path.isfile(tpr)
     assert os.path.splitext(tpr)[1] == ".tpr"
-    if not os.path.exists(configuration.lockers): os.mkdir(configuration.lockers)
+    if not os.path.exists(configuration.config.lockers): os.mkdir(configuration.config.lockers)
     
     # Create workdir, copy files overthere
     assert not os.path.exists("workdir")
     id0 = str(uuid.uuid4())
-    workdir = "%s/%s" % (configuration.lockers, id0)
+    workdir = "%s/%s" % (configuration.config.lockers, id0)
     os.mkdir(workdir)
     os.symlink(workdir, "workdir")
     local_dir = os.path.dirname(tpr) # FIXME this should be stored
@@ -199,10 +200,14 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     
     remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
     print remote_workdir
-    out, err = cluster.do_submit(shell, remote_workdir, nodes=nodes, duration=duration)
+    job = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, 0, nodes)
+    out, err = cluster.do_submit(shell, job, nodes=nodes, duration=duration)
+    
     print out, err
-    cluster_id = cluster.parse_qsub(out)
-    j = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes)
+    cluster_id = int(out[0])
+    #cluster_id = cluster.parse_qsub(out)
+    #j = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes)
+    job.cluster_id = cluster_id
 
-    return j        
+    return job
         
