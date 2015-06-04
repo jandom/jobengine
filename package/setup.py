@@ -19,6 +19,8 @@ import tempfile
 # - mdanalysis
 # - sql alchemy	
 
+required = ['spur', 'paramiko', 'scp', 'sqlalchemy', 'tempfile']
+
 if __name__ == '__main__':
 
     extensions = []
@@ -27,7 +29,8 @@ if __name__ == '__main__':
           version           = "alpha",
           packages          = [ 'jobengine',],
           package_dir       = {'jobengine': 'jobengine'},
-          requires          = ['spur', 'paramiko', 'scp', 'sqlalchemy', 'tempfile'],
+          setup_requires   = required,
+          install_requires = required,
           scripts           = glob.glob('jobengine/scripts/*.py'),
           ext_package       = 'jobengine',
           ext_modules       = extensions,
