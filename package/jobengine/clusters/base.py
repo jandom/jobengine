@@ -15,14 +15,11 @@ class Cluster(object):
 
     def do_submit(self, shell, job,  **kwargs):
         raise NotImplementedError
-
-    def submit(self, shell, job, **kwargs):        
-        raise NotImplementedError
-
-    def do_submit(self, shell, job,  **kwargs):
-        raise NotImplementedError
                 
     def submit(self, shell, job, **kwargs):        
+        """
+            Returns a Job object
+        """
         raise NotImplementedError
 
     def get_script(self, *args):
