@@ -27,7 +27,7 @@ if __name__ == '__main__':
           version           = "alpha",
           packages          = [ 'jobengine',],
           package_dir       = {'jobengine': 'jobengine'},
-          requires          = ['spur', 'paramiko', 'scp', 'sqlalchemy', 'tempfile']
+          requires          = ['spur', 'paramiko', 'scp', 'sqlalchemy', 'tempfile'],
           scripts           = glob.glob('jobengine/scripts/*.py'),
           ext_package       = 'jobengine',
           ext_modules       = extensions,
