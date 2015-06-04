@@ -14,7 +14,7 @@ import subprocess
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--workdir", "-w", default="workdir", nargs="+")
+    parser.add_argument("--workdir", "-w", default=["workdir"], nargs="+")
     parser.add_argument("--refresh", action='store_true')
     return parser.parse_args()
 
@@ -37,13 +37,13 @@ def main():
         actual, desired = job.status, cluster.get_status(shell, job)
         print "actual =", actual, "desired =", desired
         if actual == desired : continue
-        continue
-        print "Updating"
-        job.status = desired
-        print job.status 
-        session.add(job)
-        session.commit() 
-        print "Commiting"
+
+        #print "Updating"
+        #job.status = desired
+        #print job.status 
+        #session.add(job)
+        #session.commit() 
+        #rint "Commiting"
     
 if __name__ == '__main__':
     main()    
