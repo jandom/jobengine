@@ -5,7 +5,7 @@ import time
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine 
 # jobengire
-from jobengine.core import Job, test_workdir, get_job_from_workdir
+from jobengine.core import Job, get_job_from_workdir
 from jobengine.clusters import Clusters
 from jobengine.configuration import engine_file
 

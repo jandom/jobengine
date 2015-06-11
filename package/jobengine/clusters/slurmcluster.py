@@ -14,7 +14,8 @@ class SlurmCluster(Cluster):
         (stdin, stdout, stderr) = shell.exec_command(cmd)
         stdout, stderr = stdout.readlines(), stderr.readlines()
         
-        assert(len(stderr) == 0), stderr
+        #assert(len(stderr) == 0), stderr
+	if (len(stderr) > 0): return "C"
         assert(len(stdout) == 2), stdout
         st = stdout[1].split()[4]
         return st    

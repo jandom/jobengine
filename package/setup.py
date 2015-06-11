@@ -19,7 +19,7 @@ import tempfile
 # - mdanalysis
 # - sql alchemy	
 
-required = ['spur', 'paramiko', 'scp', 'sqlalchemy', 'tempfile']
+required = ['spur', 'paramiko', 'scp', 'sqlalchemy']
 
 if __name__ == '__main__':
 

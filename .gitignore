@@ -1,2 +1,5 @@
 *.pyc
 *.*~
+package/build/*
+package/dist/*
+*.egg*

@@ -4,7 +4,6 @@ import spur
 import uuid
 import os, glob
 import shutil
-#shell = spur.SshShell(hostname="localhost", username="bob", password="password1")
 
 from paramiko import SSHClient
 from scp import SCPClient, SCPException
@@ -51,86 +50,6 @@ class Job(Base):
                                                                                                                   self.status,
                                                                                                                   self.uuid, self.workdir, self.remote_workdir,)
 
-def connect(host):
-    
-    kwargs = {"password":host.password} if hasattr(host, "password") else {"private_key_file":configuration.config.private_key_file}
-    
-    shell = spur.SshShell(
-        hostname=host.hostname,
-        username=host.username,
-        **kwargs
-    )
-    
-    return shell
-def stat(host, jobid=None):
-    pass
-    
-def cancel(host):
-    pass
-
-from gromacs.fileformats import MDP
-from MDAnalysis import Universe
-from collections import Counter
-import numpy as np
-def test_workdir(job):
-    from os.path import expanduser
-    home = expanduser("~")
-    workdir = "{}/.lockers/{}".format(home,job.uuid)
-    return test_workdir_contents(os.path.join(workdir, "grompp.mdp"),
-                                 os.path.join(workdir, "conf.gro"),
-                                 os.path.join(workdir, "traj.xtc"),)
-
-
-def test_workdir_contents(mdp_file="grompp.mdp", conf_file="conf.gro", traj_file="workdir/traj.xtc"):
-    mdp = MDP(mdp_file)
-   
-    if not   isinstance(mdp["nsteps"],int):
-        nsteps = mdp["nsteps"].split()[0]
-    else:
-        nsteps = mdp["nsteps"]
-    target_time = int(nsteps) * mdp["dt"]  # target chemical time in ps
-    if not os.path.exists(traj_file): return None, None
-    u = Universe(conf_file, traj_file)
-    times = [f.time for f in u.trajectory]
-    
-    # Check if there are no double frames
-    c = Counter(times)
-    c.most_common(3)
-    assert(c.most_common(1)[0][1]  == 1)
-    
-    # Check if no frames are missing
-    desired_times = list(np.arange(0.0, max(times)+mdp["dt"]*mdp["nstxtcout"], mdp["dt"]*mdp["nstxtcout"]))
-    assert(len(times) == len(desired_times))
-    
-    return max(times), target_time
-
-def submit(tpr, cluster):
-    assert os.path.isfile(tpr)
-    if not os.path.exists(configuration.config.lockers): os.mkdir(configuration.config.lockers)
-    assert not os.path.exists("workdir")
-    id0 = str(uuid.uuid4())
-    workdir = "%s/%s" % (configuration.config.lockers, id0)
-    os.mkdir(workdir)
-    os.symlink(workdir, "workdir")
-    shutil.copy(tpr, workdir)
-    #open("%s/submit.sh" % workdir,"w").write(cluster.script)
-    open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0))) 
-    
-    ssh = SSHClient()
-    ssh.load_system_host_keys()
-    ssh.connect(cluster.hostname, username=cluster.username)
-    scp = SCPClient(ssh.get_transport())
-    scp.put(workdir, "%s/.lockers/" % (cluster.path), recursive=True)
-    
-    shell = cluster.connect()
-    
-    with shell:
-        remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
-        result = shell.run(["qsub","%s/.lockers/%s/submit.sh" % (cluster.path, id0)], cwd=remote_workdir)
-        cluster_id = cluster.parse_qsub(result)
-        j = Job("test", id0, workdir, remote_workdir, cluster.name, cluster_id)
-    return j
-
 def get_job_from_workdir(session, workdir):
     uuid0 = os.path.basename(os.path.realpath(workdir))
     jobs = [job for job in session.query(Job).order_by(Job.id) if job.uuid == uuid0]
@@ -138,17 +57,25 @@ def get_job_from_workdir(session, workdir):
     job = jobs[0]    
     return job
 
-def _copy(pattern, workdir):
-	for f in glob.glob(pattern):
-		if os.path.exists(f):
-			shutil.copy(f, workdir)
+def copy_glob_to_local_locker(pattern, workdir):
+	  for f in glob.glob(pattern):
+		    if os.path.exists(f):
+			      shutil.copy(f, workdir)
 
 def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1, processes=16, script=None):
+    """
+
+      - Argument validation
+      - Copy from cwd to locker (on local machine)
+      - Copy from local locker to remote locker
+      - Submit 
+
+    """
     assert os.path.isfile(tpr)
     assert os.path.splitext(tpr)[1] == ".tpr"
     if not os.path.exists(configuration.config.lockers): os.mkdir(configuration.config.lockers)
     
-    # Create workdir, copy files overthere
+    # Create workdir, copy files over there
     assert not os.path.exists("workdir")
     id0 = str(uuid.uuid4())
     workdir = "%s/%s" % (configuration.config.lockers, id0)
@@ -157,36 +84,31 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     local_dir = os.path.dirname(tpr) # FIXME this should be stored
     shutil.copy(tpr, workdir)
     
-    _copy("topol*.tpr", workdir)
-    _copy("plumed.dat*", workdir)
-    _copy("HILLS*", workdir)
-    _copy("*.mdp", workdir)
-    _copy("*.pdb", workdir)
-    _copy("*.gro", workdir)
+    copy_glob_to_local_locker("topol*.tpr", workdir)
+    copy_glob_to_local_locker("plumed.dat*", workdir)
+    copy_glob_to_local_locker("HILLS*", workdir)
+    copy_glob_to_local_locker("*.mdp", workdir)
+    copy_glob_to_local_locker("*.pdb", workdir)
+    copy_glob_to_local_locker("*.gro", workdir)
 
     import distutils.core
     
     # Rob's umbrella sampling code
-    def copy_to_locker(local_dir, dirname):
+    def copy_to_local_locker(local_dir, dirname):
         dir = os.path.join(local_dir, dirname)
         if os.path.exists(dir):
             os.mkdir("{}/{}".format(workdir, dirname)) 
             distutils.dir_util.copy_tree(dir, "{}/{}".format(workdir, dirname))
     
     
-    copy_to_locker(local_dir, "tpr")
-    copy_to_locker(local_dir, "tprs")
-    copy_to_locker(local_dir, "qij")
-    copy_to_locker(local_dir, "qvt")
-    copy_to_locker(local_dir, "mdp")
+    copy_to_local_locker(local_dir, "tpr")
+    copy_to_local_locker(local_dir, "tprs")
+    copy_to_local_locker(local_dir, "qij")
+    copy_to_local_locker(local_dir, "qvt")
+    copy_to_local_locker(local_dir, "mdp")
     
-    print nodes, processes, id0
+    print("nodes=", nodes, "processes=",processes, "id=", id0)
     
-    # Use a cluster-specific submit.sh script or not
-    if not script:
-        open("%s/submit.sh" % workdir,"w").write(cluster.get_script(job_name, "%s/.lockers/%s" % (cluster.path, id0), duration, nodes, processes))
-    else: shutil.copy(script, "{}/submit.sh".format(workdir))
-
     # Setup SSH client to copy files over via scp
     scp = SCPClient(shell.get_transport(), socket_timeout = 600)
 
@@ -204,8 +126,6 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     job = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes)
 
     
-    cluster_id = cluster.submit(shell, job, nodes=nodes, duration=duration)
-    job.cluster_id = cluster_id
-
+    job = cluster.submit(shell, job, nodes=nodes, duration=duration)
     return job
         

@@ -1,8 +1,7 @@
 
-import subprocess
-import spur
+import subprocess, os, spur, paramiko
 from jobengine.configuration import config
-import paramiko
+
 
 class Cluster(object):
     name = None
@@ -37,8 +36,8 @@ class Cluster(object):
         Pull the data from remote workdir into the local workdir using the
         scp command.
         """
-        from os.path import expanduser
-        home = expanduser("~")
+        
+        home = os.environ["HOME"]
         cmd = "%s %s@%s:%s/* /%s/.lockers/%s/ " \
                              % (self._rsync(verbose), self.username, self.hostname, job.remote_workdir, home, job.uuid)
         cmd += " --include='*.xtc' --include='*.trr' --include='*.gro' --include='*.mdp' --include='*.sh' --include='*HILLS*' --include='*COLVAR*' --include='*.cpt' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
@@ -51,8 +50,8 @@ class Cluster(object):
         scp command.
         """
         #assert(pattern)
-        from os.path import expanduser
-        home = expanduser("~")
+        
+        home = os.environ["HOME"]
         cmd = "%s ~/.lockers/%s/* %s@%s:~/.lockers/%s  " \
                              % (self._rsync(verbose), job.uuid, self.username, self.hostname, job.uuid)
         #cmd += " --include='*.xtc' --include='*.gro' --include='*HILLS*' --include='*COLVAR*' --include='*.dat'  --include='*.log' --include='*.ndx' --exclude='*.*' "
@@ -75,15 +74,24 @@ class Cluster(object):
 
     def connect(self):
 
-        host = config.ssh.lookup(self.name.lower())
+        # load and parse SSH config file
+        ssh_config_file = '{}/.ssh/config'.format(os.environ["HOME"])
+        ssh_config = paramiko.SSHConfig()
+        ssh_config.parse(open(ssh_config_file))
+        host = ssh_config.lookup(self.name.lower())
 
+        # load private DSA key
+        private_key_file=os.path.join(os.environ["HOME"], ".ssh", "id_dsa")
+        dsa_key = paramiko.DSSKey.from_private_key_file(private_key_file)
+
+        # create client
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         if 'proxycommand' in host:
             proxy = paramiko.ProxyCommand(host['proxycommand'])
-            ret = client.connect(host["hostname"], username=host["user"], pkey=config.dsa_key, sock=proxy, timeout=300)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=dsa_key, sock=proxy, timeout=300)
         else:
-            ret = client.connect(host["hostname"], username=host["user"], pkey=config.dsa_key, timeout=300)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=dsa_key, timeout=300)
         return client
 
     def get_status_all(self, shell):
