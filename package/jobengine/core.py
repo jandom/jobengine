@@ -57,11 +57,6 @@ def get_job_from_workdir(session, workdir):
     job = jobs[0]    
     return job
 
-def copy_glob_to_local_locker(pattern, workdir):
-	  for f in glob.glob(pattern):
-		    if os.path.exists(f):
-			      shutil.copy(f, workdir)
-
 def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1, processes=16, script=None):
     """
 
@@ -79,41 +74,20 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     assert not os.path.exists("workdir")
     id0 = str(uuid.uuid4())
     workdir = "%s/%s" % (configuration.config.lockers, id0)
-    os.mkdir(workdir)
-    os.symlink(workdir, "workdir")
+    
     local_dir = os.path.dirname(tpr) # FIXME this should be stored
-    shutil.copy(tpr, workdir)
-    
-    copy_glob_to_local_locker("topol*.tpr", workdir)
-    copy_glob_to_local_locker("plumed.dat*", workdir)
-    copy_glob_to_local_locker("HILLS*", workdir)
-    copy_glob_to_local_locker("*.mdp", workdir)
-    copy_glob_to_local_locker("*.pdb", workdir)
-    copy_glob_to_local_locker("*.gro", workdir)
+    if not local_dir: local_dir = os.getcwd()
+    ignore = shutil.ignore_patterns("\#*", "workdir*", "*.ff")
+    print("local copy:", "src=", local_dir, "dst=", workdir)
+    shutil.copytree(local_dir, workdir, symlinks=False, ignore=ignore)
+    os.symlink(workdir, "workdir")
 
-    import distutils.core
-    
-    # Rob's umbrella sampling code
-    def copy_to_local_locker(local_dir, dirname):
-        dir = os.path.join(local_dir, dirname)
-        if os.path.exists(dir):
-            os.mkdir("{}/{}".format(workdir, dirname)) 
-            distutils.dir_util.copy_tree(dir, "{}/{}".format(workdir, dirname))
-    
-    
-    copy_to_local_locker(local_dir, "tpr")
-    copy_to_local_locker(local_dir, "tprs")
-    copy_to_local_locker(local_dir, "qij")
-    copy_to_local_locker(local_dir, "qvt")
-    copy_to_local_locker(local_dir, "mdp")
-    
-    print("nodes=", nodes, "processes=",processes, "id=", id0)
-    
     # Setup SSH client to copy files over via scp
+    dst = "%s/.lockers/" % (cluster.path)
+    print("remote copy:", "src=", workdir, "dst=", cluster.name,":",)
     scp = SCPClient(shell.get_transport(), socket_timeout = 600)
-
     try:
-        scp.put(workdir, "%s/.lockers/" % (cluster.path), recursive=True)
+        scp.put(workdir, dst, recursive=True)
     except SCPException, e:
         print "SCPException",e
         shutil.rmtree(workdir)
@@ -121,7 +95,9 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
         return None
     
     remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
-    print remote_workdir
+    
+    print("nodes=", nodes, "processes=",processes, "id=", id0)
+
     cluster_id = 0 
     job = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes)
 

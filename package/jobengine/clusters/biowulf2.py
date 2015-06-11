@@ -27,6 +27,7 @@ class Biowulf2(SlurmCluster):
     def submit(self, shell, job, **kwargs):        
 
         out, err = self.do_submit(shell, job, **kwargs)        
+        print out, err
         cluster_id = int(out[0])
         job.cluster_id = cluster_id
         print cluster_id

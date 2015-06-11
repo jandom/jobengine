@@ -5,7 +5,7 @@ import time
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine 
 # jobengire
-from jobengine.core import Job, test_workdir
+from jobengine.core import Job
 from jobengine.clusters import Clusters
 from jobengine.configuration import engine_file
 
@@ -36,7 +36,7 @@ def process_resubmit(args):
             if not shell: continue
             status = cluster.get_status(shell, job)
             job.status = status 
-            print("Before:",status, job.id); continue
+            print("Before:",status, job.id)
             if os.path.exists("{}/confout.gro".format(job.local_workdir)):
                 job.status = "S"
             if job.status == "C":
