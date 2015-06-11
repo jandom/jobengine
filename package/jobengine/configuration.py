@@ -21,25 +21,15 @@ private_key_file=os.path.join(os.environ["HOME"], ".ssh", "id_dsa")
 lockers = os.path.join(os.environ["HOME"],".lockers")
 engine_file = 'sqlite:///%s/jobengine.sql' % lockers	  		
 
-if not os.path.exists(private_key_file):
-	raise IOError("Private key file doesn't exist at '{}'".format(private_key_file))
-dsa_key = paramiko.DSSKey.from_private_key_file(private_key_file)
-
-ssh_config_file = '{}/.ssh/config'.format(expanduser("~"))
-if not os.path.exists(ssh_config_file):
-	raise IOError("SSH config file doesn't exist at '{}'".format(ssh_config_file))
-ssh = paramiko.SSHConfig()
-ssh.parse(open(ssh_config_file))
-
 config = {
 	"engine_file": engine_file,
-	"private_key_file": private_key_file,
+	"private_key_file": None,
 	"lockers": lockers,
 	"rsync": {
 		"flags": "-a --compress",
 	},
-	"ssh": ssh,
-	"dsa_key": dsa_key,
+	"ssh": None,
+	"dsa_key": None,
 
 }
 

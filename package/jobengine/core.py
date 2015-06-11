@@ -28,8 +28,9 @@ class Job(Base):
      cluster_id = Column(Integer)
      nodes = Column(Integer)
      status = Column(String)
+     queue = Column(String)
 
-     def __init__(self, name, uuid, workdir, local_workdir, remote_workdir, cluster_name, cluster_id, nodes=1):
+     def __init__(self, name, uuid, workdir, local_workdir, remote_workdir, cluster_name, cluster_id, nodes=1, queue=None):
          self.name = name
          self.uuid = uuid
          self.workdir = workdir
@@ -41,6 +42,7 @@ class Job(Base):
          self.current_chemtime = 0.0
          self.target_chemtime = 0.01
          self.nodes = nodes
+         self.queue = queue 
          
 
      def __repr__(self):

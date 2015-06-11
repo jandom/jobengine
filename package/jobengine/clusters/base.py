@@ -76,22 +76,33 @@ class Cluster(object):
 
         # load and parse SSH config file
         ssh_config_file = '{}/.ssh/config'.format(os.environ["HOME"])
-        ssh_config = paramiko.SSHConfig()
-        ssh_config.parse(open(ssh_config_file))
-        host = ssh_config.lookup(self.name.lower())
+        if os.path.exists( ssh_config_file):
+            ssh_config = paramiko.SSHConfig()
+            ssh_config.parse(open(ssh_config_file))
+            host = ssh_config.lookup(self.name.lower())
 
-        # load private DSA key
-        private_key_file=os.path.join(os.environ["HOME"], ".ssh", "id_dsa")
-        dsa_key = paramiko.DSSKey.from_private_key_file(private_key_file)
+        # load private DSA/RSA key
+        dsa_private_key_file=os.path.join(os.environ["HOME"], ".ssh", "id_dsa")
+        rsa_private_key_file=os.path.join(os.environ["HOME"], ".ssh", "id_rsa")
+        dsa_key, rsa_key = None, None
+        if os.path.exists(dsa_private_key_file):
+            dsa_key = paramiko.DSSKey.from_private_key_file(dsa_private_key_file)
+        if os.path.exists(rsa_private_key_file):
+            rsa_key = paramiko.DSSKey.from_private_key_file(rsa_private_key_file)
+        if not (rsa_key or dsa_key):
+            raise Exception("Neither DSA nor RSA key found in {} {}".format(dsa_private_key_file, rsa_private_key_file))
+
+        pkey = dsa_key if dsa_key else rsa_key
 
         # create client
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        if 'proxycommand' in host:
+
+        if host and 'proxycommand' in host:
             proxy = paramiko.ProxyCommand(host['proxycommand'])
-            ret = client.connect(host["hostname"], username=host["user"], pkey=dsa_key, sock=proxy, timeout=300)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=pkey, sock=proxy, timeout=300)
         else:
-            ret = client.connect(host["hostname"], username=host["user"], pkey=dsa_key, timeout=300)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=pkey, timeout=300)
         return client
 
     def get_status_all(self, shell):
