@@ -54,5 +54,19 @@ And add
     */30 * * * * qserver.py
     */60 * * * * qserver.py --action fetch    
 
+Example ssh config file
+=======================
+
+```
+# Place inside ~/.ssh/config
+
+Host biowulf2
+   HostName biowulf2.nih.gov
+   User domanskij
+   #LogLevel QUIET
+   #IdentityFile ~/.ssh/id_dsa
+   #ProxyCommand ssh domanski@clathrin.bioch.ox.ac.uk exec nc %h %p
+
+
 
 
