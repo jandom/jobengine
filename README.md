@@ -3,63 +3,56 @@ jobengine
 
 Manage MD simulations across multiple computing clusters
 
+Installation
+------------
 
-Origins
--------
+    git clone https://github.com/jandom/jobengine.git
+    cd jobengine/package
+    python setup.py
 
-jobengine was a tool used in a company I used to work for. D. E. Shaw Research
-built this awesome, special-purpose super-computer that was generating tons of numerical
-simulation data. jobengine, their jobengine, was a tool for sending computational
-jobs to that super-computer and managing the simulation data and metadata. 
+Test
+----
 
-This jobengine that I'm making available here is a testament to the ingenuity of 
-the engineers who built the original jobengine.  
-
-Aim
----
-
-Save time, avoid manual labour. 
-
-Advantages
-----------
-
-* use different clusters
-    learn once, and manage your jobs accross multiple computing clusters
-* automatically download results
-    use a cron job to fetch data from clusturs
-* modify your directory structure
-    no more worries about moving/renaming directories on your local machine
-* distributed computing
-    works with any submission system
-* easy backup
-    research data is stored in one centralized location, ~/.lockers
-
-Limitations
------------ 
-
-* only supports gromacs
+    $ python -c "import jobengine; print jobengine"
+    <module 'jobengine' from 'jobengine/__init__.pyc'>
 
 Examples
 --------
 
 Submit a job, given a tpr
 
-    `qsubmit.py --cluster biowulf --topol topol.tpr` or 
-    `qsubmit.py --cluster oxford-cluster-1 --topol topol.tpr`
+    qsubmit.py --cluster my_cluster --topol topol.tpr --nodes 16
+    qsubmit.py --cluster my_cluster 
 
 Fetch some results, manually
 
-    `qfetch.py`
+    qfetch.py
     
-Cancel a job, then re-submit manually
+Cancel a job, using a default -w/-workdir or a list of workdirs
 
-    `qcancel.py`    
-    `qsubmit.py --workdir workdir`
+    qcancel.py 
+    qcancel.py -w workdir__older
+    qcancel.py --workdir workdir1 workdir2 workdir3   
+
+Re-submit a job, using either a default -w/workdir argument. Re-submit to a different partition, using a different number of nodes
+
+    qsubmit.py 
+
+One can override the partition or node number used to inintialize the original job 
+
+    qsubmit.py --partion new_partition
+    qsubmit.py --nodes 32
     
 Add to crontabe to re-submit broken jobs (every 30 mins) and fetch results (every 60 mins),     
 
-    `*/30 * * * * qserver.py`
-    `*/60 * * * * qserver.py --action fetch`    
+Edit crontable using 
+
+    crontab -e
+
+And add 
+
+    */30 * * * * qserver.py
+    */60 * * * * qserver.py --action fetch    
 
 
 
