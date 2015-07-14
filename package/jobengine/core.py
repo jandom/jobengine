@@ -28,9 +28,9 @@ class Job(Base):
      cluster_id = Column(Integer)
      nodes = Column(Integer)
      status = Column(String)
-     queue = Column(String)
+     partition = Column(String)
 
-     def __init__(self, name, uuid, workdir, local_workdir, remote_workdir, cluster_name, cluster_id, nodes=1, queue=None):
+     def __init__(self, name, uuid, workdir, local_workdir, remote_workdir, cluster_name, cluster_id, nodes=1, partition=None):
          self.name = name
          self.uuid = uuid
          self.workdir = workdir
@@ -42,7 +42,7 @@ class Job(Base):
          self.current_chemtime = 0.0
          self.target_chemtime = 0.01
          self.nodes = nodes
-         self.queue = queue 
+         self.partition = partition
          
 
      def __repr__(self):
@@ -59,7 +59,7 @@ def get_job_from_workdir(session, workdir):
     job = jobs[0]    
     return job
 
-def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1, processes=16, script=None):
+def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1, processes=16, script=None, partition=None):
     """
 
       - Argument validation
@@ -101,9 +101,9 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     print("nodes=", nodes, "processes=",processes, "id=", id0)
 
     cluster_id = 0 
-    job = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes)
+    job = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes, partition)
 
     
-    job = cluster.submit(shell, job, nodes=nodes, duration=duration)
+    job = cluster.submit(shell, job, nodes=nodes, duration=duration, partition=partition)
     return job
         

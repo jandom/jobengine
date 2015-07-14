@@ -2,12 +2,10 @@
 
 from . import biowulf
 from . import biowulf2
-from . import biowulf2ib
 
 clusters = {
     "biowulf": biowulf.Biowulf, 
     "biowulf2": biowulf2.Biowulf2, 
-    "biowulf2ib": biowulf2ib.Biowulf2IB
     }
 
 class Clusters(object):

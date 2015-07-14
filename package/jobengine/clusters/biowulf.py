@@ -67,6 +67,7 @@ class Biowulf(PBSCluster):
         kwargs["nodes"] = job.nodes
         
         stdout, stderr = self.do_submit(shell, job.remote_workdir, **kwargs)
+	print stdout, stderr
         cluster_id = self.parse_qsub(stdout)
         job.cluster_id = cluster_id
         job.status = self.get_status(shell, job)

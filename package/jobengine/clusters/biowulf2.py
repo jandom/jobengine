@@ -8,15 +8,15 @@ class Biowulf2(SlurmCluster):
     hostname = "helix.nih.gov"
     username = "domanskij"
     path = "/data/domanskij"
-    partition = "norm"
+    partitions = ["norm", "ibfdr", "niddk"]
 
     def do_submit(self, shell, job,  **kwargs):
         cmd = "cd {}; {} --partition={} --job-name={}  --nodes={} --exclusive --ntasks-per-node=16  --time={} {}/submit.sh".format(
                 job.remote_workdir, 
                 self.submit_command, 
-                self.partition, 
-                kwargs.get('jobname', job.name), 
-                kwargs.get('nodes', job.nodes), 
+                kwargs.get('partition') if kwargs.get('partition') else job.partition,
+                kwargs.get('jobname') if kwargs.get('jobname') else job.name,
+                kwargs.get('nodes') if kwargs.get('nodes') else job.nodes,
                 kwargs.get('duration', '24:00:00'), 
                 job.remote_workdir
             )
