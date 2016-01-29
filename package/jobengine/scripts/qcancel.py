@@ -10,7 +10,8 @@ import argparse, os
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--workdir", "-w", default="workdir")
+    #parser.add_argument("--workdir", "-w", default="workdir")
+    parser.add_argument("--workdir", "-w", default=["workdir"], nargs="+")
     return parser.parse_args()
 
 def main():
@@ -20,16 +21,15 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
     clusters = Clusters()    
-    
-    job = get_job_from_workdir(session, args.workdir)
-    print job
-    cluster, shell = clusters.get_cluster(job.cluster_name)
-    print cluster, shell    
-    #if job.status == "S": 
-	#	print("Job already cancelled")
-    cluster.cancel(shell, job)
-    job.status = "S" # Stopped
-    session.add(job)
+
+    for workdir in args.workdir:    
+	job = get_job_from_workdir(session, workdir)
+	print job
+	cluster, shell = clusters.get_cluster(job.cluster_name)
+	print cluster, shell    
+	cluster.cancel(shell, job)
+	job.status = "S" # Stopped
+	session.add(job)
     session.commit()
 
 if __name__ == "__main__":

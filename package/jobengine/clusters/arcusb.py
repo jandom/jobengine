@@ -2,13 +2,13 @@
 
 from slurmcluster import SlurmCluster
 
-class Biowulf2(SlurmCluster):
-    name = "BIOWULF2"
+class ArcusB(SlurmCluster):
+    name = "ARCUS-B"
     proxy = None
-    hostname = "helix.nih.gov"
-    username = "domanskij"
-    path = "/data/domanskij"
-    partitions = ["norm", "ibfdr", "niddk"]
+    hostname = "arcus-b"
+    username = "jdomanski"
+    path = "/home/sbcb-membr/jdomanski/"
+    partitions = ["compute"]
 
     def do_submit(self, shell, job,  **kwargs):
         # get the defaults 
@@ -38,7 +38,7 @@ class Biowulf2(SlurmCluster):
 
         out, err = self.do_submit(shell, job, **kwargs)        
         print out, err
-        cluster_id = int(out[0])
+        cluster_id = int(out[0].split()[-1])
         job.cluster_id = cluster_id
         print cluster_id
         job.status = self.get_status(shell, job)

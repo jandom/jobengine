@@ -26,7 +26,7 @@ config = {
 	"private_key_file": None,
 	"lockers": lockers,
 	"rsync": {
-		"flags": "-a --compress",
+		"flags": "-a ",#--compress",
 	},
 	"ssh": None,
 	"dsa_key": None,

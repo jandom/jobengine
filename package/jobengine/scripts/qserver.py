@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import fcntl
 import time
 # sqlalchemy
 from sqlalchemy.orm import sessionmaker
@@ -54,7 +54,7 @@ def process_fetch(args):
     session = Session()
     clusters = Clusters()
     
-    while True:
+    if True:
         print("Fetching")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
 	print(dir(jobs[0]))
@@ -65,24 +65,6 @@ def process_fetch(args):
             cluster, shell = clusters.get_cluster(job.cluster_name)
             if not shell: continue
             rsync_return_code = cluster.pull(shell, job)   
-            continue
-            assert(rsync_return_code==0)
-            chemtime, target_chemtime = test_workdir(job.workdir)
-            print chemtime, target_chemtime 
-            # If the simulation hasn't started yet, skip
-            if not (chemtime and target_chemtime): continue
-            # If the target chemtime hasn't been achieved, don't stop
-            if not (chemtime == target_chemtime): continue
-            # Stop the simulation if complete
-            if job.status == "S": continue
-            continue
-            cluster.delete(shell, job.cluster_id)
-            print("Stopping", job)
-            job.status = "S" # Stopped
-            session.add(job)
-            session.commit()
-        break
-        #time.sleep(60*60) # 60 minutes
 
 def process_test(args):
     
@@ -102,13 +84,17 @@ from multiprocessing import Process
 
 def main():
     args = parse_args()
-  
+
+    x = open('/tmp/qserver.lock', 'w+')
+    fcntl.flock(x, fcntl.LOCK_EX | fcntl.LOCK_NB)
     if args.action == "resubmit":
         process_resubmit(args)
     if args.action == "fetch":
         process_fetch(args)
     if args.action == "test":
         process_test(args)
+
+    fcntl.flock(x, fcntl.LOCK_UN)
     #Process(target=process_resubmit).start()
     #Process(target=process_fetch).start()    
     

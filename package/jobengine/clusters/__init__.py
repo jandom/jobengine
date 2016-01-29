@@ -1,11 +1,14 @@
 
-
+from . import arcus
+from . import arcusb
 from . import biowulf
 from . import biowulf2
 
 clusters = {
     "biowulf": biowulf.Biowulf, 
     "biowulf2": biowulf2.Biowulf2, 
+    "arcus-b": arcusb.ArcusB,
+    "arcus": arcus.Arcus,
     }
 
 class Clusters(object):

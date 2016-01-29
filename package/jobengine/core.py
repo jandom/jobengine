@@ -59,7 +59,7 @@ def get_job_from_workdir(session, workdir):
     job = jobs[0]    
     return job
 
-def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1, processes=16, script=None, partition=None):
+def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1, processes=16, script=None, partition=None, ntasks_per_node=16):
     """
 
       - Argument validation
@@ -79,7 +79,7 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     
     local_dir = os.path.dirname(tpr) # FIXME this should be stored
     if not local_dir: local_dir = os.getcwd()
-    ignore = shutil.ignore_patterns("\#*", "workdir*", "*.ff")
+    ignore = shutil.ignore_patterns("\#*", "workdir*", "analysis*")
     print("local copy:", "src=", local_dir, "dst=", workdir)
     shutil.copytree(local_dir, workdir, symlinks=False, ignore=ignore)
     os.symlink(workdir, "workdir")
@@ -98,12 +98,14 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     
     remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
     
-    print("nodes=", nodes, "processes=",processes, "id=", id0)
+    #if not partition: cluster.partitions[0]
+
+    print("nodes=", nodes, "processes=",processes, "id=", id0, "partition=", partition)
 
     cluster_id = 0 
     job = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes, partition)
 
     
-    job = cluster.submit(shell, job, nodes=nodes, duration=duration, partition=partition)
+    job = cluster.submit(shell, job, nodes=nodes, duration=duration, partition=partition, ntasks_per_node=ntasks_per_node)
     return job
         

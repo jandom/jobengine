@@ -26,7 +26,7 @@ class Cluster(object):
       
     def _rsync(self, verbose):
         verbose=True
-        return "/usr/bin/rsync -e '{proxy}' {verbose} {flags}".format(**{"proxy": ("ssh -q {} ssh".format(self.proxy) if self.proxy else "ssh -q"), 
+        return "/usr/bin/rsync --numeric-ids -e '{proxy} -T -c arcfour -o Compression=no -x' {verbose} {flags}".format(**{"proxy": ("ssh -q {} ssh".format(self.proxy) if self.proxy else "ssh -q"), 
                                                                          "verbose": ('-v  --progress' if verbose else ''),
                                                                          "flags": config.rsync.flags,
                                                                          })
@@ -40,7 +40,7 @@ class Cluster(object):
         home = os.environ["HOME"]
         cmd = "%s %s@%s:%s/* /%s/.lockers/%s/ " \
                              % (self._rsync(verbose), self.username, self.hostname, job.remote_workdir, home, job.uuid)
-        cmd += " --include='*.xtc' --include='*.trr' --include='*.gro' --include='*.mdp' --include='*.sh' --include='*HILLS*' --include='*COLVAR*' --include='*.cpt' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
+        cmd += " --include='*.xtc' --include='*.trr' --include='*.gro' --include='*.mdp' --include='*.sh' --include='*HILLS*' --include='*COLVAR*' --include='*colvar*' --include='*.cpt' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
         print cmd
         return subprocess.call(cmd, shell=True)    
 

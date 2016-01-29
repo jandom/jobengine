@@ -33,7 +33,7 @@ class PBSCluster(Cluster):
         return stdout    
     
     def submit(self, shell, job, **kwargs):        
-        result = self.do_submit(shell, job.remote_workdir)
+        result = self.do_submit(shell, job, **kwargs)
         cluster_id = self.parse_qsub(result)
         job.cluster_id = cluster_id
         job.status = self.get_status(shell, job)
@@ -41,9 +41,13 @@ class PBSCluster(Cluster):
         
     def cancel(self, shell, job):
         status = self.get_status(shell, job)
-        if status == "R":
-          cmd = "qdel {}".format(str(job.cluster_id))
-          (stdin, stdout, stderr) = shell.exec_command(cmd)
-          if stdout:
-            return False 
+
+        # if job is running or queue
+        if status in ["R", "Q"]:
+            cmd = "qdel {}".format(str(job.cluster_id))
+            (stdin, stdout, stderr) = shell.exec_command(cmd)
+            stdout = stdout.readlines()
+            stderr = stderr.readlines()
+            if stdout:
+                return False 
         return True

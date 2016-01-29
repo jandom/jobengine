@@ -11,16 +11,17 @@ import argparse, os
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--topol", default="topol.tpr")
-    parser.add_argument("--jobname")
-    parser.add_argument("--cluster", default="arcus-gpu")
-    parser.add_argument("--partition")
+    parser.add_argument("-t","--topol", default="topol.tpr")
+    parser.add_argument("-j", "--jobname")
+    parser.add_argument("-c", "--cluster", default="arcus-gpu")
+    parser.add_argument("-p","--partition")
     
     parser.add_argument("--workdir", "-w", default=None)
-    parser.add_argument("--duration", default="24:00:00")
-    parser.add_argument("--nodes", type=int)
+    parser.add_argument("--duration", "-d", default="24:00:00")
+    parser.add_argument("-n","--nodes", type=int)
+    parser.add_argument("--ntasks-per-node", type=int, default=16)
     parser.add_argument("--processes", type=int, default=16)
-    parser.add_argument("--script", default=None)
+    parser.add_argument("-s","--script", default=None)
     return parser.parse_args()
 
 def main():
@@ -42,7 +43,7 @@ def main():
             print("Job already running or queued")
             return        
         cluster, shell = Clusters().get_cluster(job.cluster_name)
-        job = cluster.submit(shell, job, duration=args.duration, nodes=args.nodes, partition=args.partition)
+        job = cluster.submit(shell, job, duration=args.duration, nodes=args.nodes, partition=args.partition, ntasks_per_node=args.ntasks_per_node)
         status = cluster.get_status(shell, job)
         job.status = status
         
@@ -54,7 +55,7 @@ def main():
     # Create a brand-new workdir    
     else:
         cluster, shell = Clusters().get_cluster(args.cluster)
-        job = create(args.topol, cluster, shell, args.jobname, args.duration, args.nodes, args.processes, args.script, args.partition)
+        job = create(args.topol, cluster, shell, args.jobname, args.duration, args.nodes, args.processes, args.script, args.partition, ntasks_per_node=args.ntasks_per_node)
         assert(job)
         print job
         status = cluster.get_status(shell, job)

@@ -21,7 +21,7 @@ def main():
     session = Session()
     
     
-    jobs = [job for job in session.query(Job).order_by(Job.id) if job.cluster_name == args.cluster.upper()]
+    jobs = [job for job in session.query(Job).order_by(Job.id) if job.cluster_name.startswith(args.cluster.upper())]
     
     print len(jobs )
     for job in jobs :
