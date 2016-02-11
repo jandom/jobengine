@@ -13,15 +13,15 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-t","--topol", default="topol.tpr")
     parser.add_argument("-j", "--jobname")
-    parser.add_argument("-c", "--cluster", default="arcus-gpu")
+    parser.add_argument("-c", "--cluster")
     parser.add_argument("-p","--partition")
     
-    parser.add_argument("--workdir", "-w", default=None)
+    parser.add_argument("--workdir", "-w")
     parser.add_argument("--duration", "-d", default="24:00:00")
     parser.add_argument("-n","--nodes", type=int)
     parser.add_argument("--ntasks-per-node", type=int, default=16)
     parser.add_argument("--processes", type=int, default=16)
-    parser.add_argument("-s","--script", default=None)
+    parser.add_argument("-s","--script")
     return parser.parse_args()
 
 def main():

@@ -100,9 +100,9 @@ class Cluster(object):
 
         if host and 'proxycommand' in host:
             proxy = paramiko.ProxyCommand(host['proxycommand'])
-            ret = client.connect(host["hostname"], username=host["user"], pkey=pkey, sock=proxy, timeout=300)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=pkey, sock=proxy, timeout=1000)
         else:
-            ret = client.connect(host["hostname"], username=host["user"], pkey=pkey, timeout=300)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=pkey, timeout=1000)
         return client
 
     def get_status_all(self, shell):

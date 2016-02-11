@@ -1,5 +1,4 @@
 
-
 from slurmcluster import SlurmCluster
 
 class Biowulf2(SlurmCluster):
@@ -11,12 +10,12 @@ class Biowulf2(SlurmCluster):
     partitions = ["norm", "ibfdr", "niddk"]
 
     def do_submit(self, shell, job,  **kwargs):
-        # get the defaults 
-        partition = kwargs.get('partition', job.partition) 
-        jobname = kwargs.get('jobname', job.name)
-        nodes = kwargs.get('nodes', job.nodes) 
-        ntasks = kwargs.get("ntasks_per_node", 16)
-        duration = kwargs.get('duration', '24:00:00')
+
+        partition = kwargs.get('partition') if kwargs.get('partition') else job.partition
+        jobname   = kwargs.get('jobname') if kwargs.get('jobname') else job.name
+        nodes     = kwargs.get('nodes') if kwargs.get('nodes') else job.nodes 
+        ntasks    = kwargs.get("ntasks_per_node") if kwargs.get("ntasks_per_node") else 16
+        duration  = kwargs.get('duration') if kwargs.get('duration') else '24:00:00'
 
         cmd = "cd {}; {} --partition={} --job-name={}  --nodes={} {} --ntasks-per-node={} --time={} {}/submit.sh".format(
                 job.remote_workdir, 
@@ -36,11 +35,16 @@ class Biowulf2(SlurmCluster):
         
     def submit(self, shell, job, **kwargs):        
 
+	# submit the job
         out, err = self.do_submit(shell, job, **kwargs)        
         print out, err
+	
+	# get cluster id
         cluster_id = int(out[0])
         job.cluster_id = cluster_id
         print cluster_id
+
+	# check job status 
         job.status = self.get_status(shell, job)
         print job.status
         return job
