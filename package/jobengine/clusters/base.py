@@ -40,7 +40,7 @@ class Cluster(object):
         home = os.environ["HOME"]
         cmd = "%s %s@%s:%s/* /%s/.lockers/%s/ " \
                              % (self._rsync(verbose), self.username, self.hostname, job.remote_workdir, home, job.uuid)
-        cmd += " --include='*.xtc' --include='*.trr' --include='*.gro' --include='*.mdp' --include='*.sh' --include='*HILLS*' --include='*COLVAR*' --include='*colvar*' --include='*.cpt' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
+        cmd += " --include='*.xtc' --include='*.trr' --include='*.gro' --include='*.mdp' --include='*.sh'  --include='*GRID*' --include='*HILLS*' --include='*COLVAR*' --include='*colvar*' --include='*.cpt' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
         print cmd
         return subprocess.call(cmd, shell=True)    
 
