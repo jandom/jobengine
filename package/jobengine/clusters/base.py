@@ -88,7 +88,7 @@ class Cluster(object):
         if os.path.exists(dsa_private_key_file):
             dsa_key = paramiko.DSSKey.from_private_key_file(dsa_private_key_file)
         if os.path.exists(rsa_private_key_file):
-            rsa_key = paramiko.DSSKey.from_private_key_file(rsa_private_key_file)
+            rsa_key = paramiko.RSAKey.from_private_key_file(rsa_private_key_file)
         if not (rsa_key or dsa_key):
             raise Exception("Neither DSA nor RSA key found in {} {}".format(dsa_private_key_file, rsa_private_key_file))
 

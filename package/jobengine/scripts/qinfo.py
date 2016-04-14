@@ -28,7 +28,7 @@ def main():
     
     for workdir in args.workdir:
         job = get_job_from_workdir(session, workdir)
-        print job
+        print(workdir,job)
 
         if not args.refresh: continue
         

@@ -68,8 +68,6 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
       - Submit 
 
     """
-    assert os.path.isfile(tpr)
-    assert os.path.splitext(tpr)[1] == ".tpr"
     if not os.path.exists(configuration.config.lockers): os.mkdir(configuration.config.lockers)
     
     # Create workdir, copy files over there
@@ -77,9 +75,8 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     id0 = str(uuid.uuid4())
     workdir = "%s/%s" % (configuration.config.lockers, id0)
     
-    local_dir = os.path.dirname(tpr) # FIXME this should be stored
-    if not local_dir: local_dir = os.getcwd()
-    ignore = shutil.ignore_patterns("\#*", "workdir*", "analysis*")
+    local_dir = os.getcwd()
+    ignore = shutil.ignore_patterns("\#*", "workdir*", "analysis*", "test*", "*topol*.top")
     print("local copy:", "src=", local_dir, "dst=", workdir)
     shutil.copytree(local_dir, workdir, symlinks=False, ignore=ignore)
     os.symlink(workdir, "workdir")
