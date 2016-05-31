@@ -51,6 +51,8 @@ Edit crontable using
 
 And add 
 
+    @hourly python ~/.local/bin/qserver.py --action fetch --cluster biowulf2
+    @hourly python ~/.local/bin/qserver.py --cluster biowulf2
     */30 * * * * qserver.py
     */60 * * * * qserver.py --action fetch    
 
