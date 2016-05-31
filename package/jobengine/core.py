@@ -76,7 +76,7 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
     workdir = "%s/%s" % (configuration.config.lockers, id0)
     
     local_dir = os.getcwd()
-    ignore = shutil.ignore_patterns("\#*", "workdir*", "analysis*", "test*", "*topol*.top")
+    ignore = shutil.ignore_patterns("\#*", "workdir*", "analysis*", "test*", "*topol*.top", "trash*")
     print("local copy:", "src=", local_dir, "dst=", workdir)
     shutil.copytree(local_dir, workdir, symlinks=False, ignore=ignore)
     os.symlink(workdir, "workdir")

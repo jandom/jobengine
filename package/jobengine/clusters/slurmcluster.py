@@ -13,13 +13,13 @@ class SlurmCluster(Cluster):
         print("cmd=",cmd)
         (stdin, stdout, stderr) = shell.exec_command(cmd)
         stdout, stderr = stdout.readlines(), stderr.readlines()
-        
+
         #assert(len(stderr) == 0), stderr
-	if (len(stderr) > 0): return "C"
+        if (len(stderr) > 0 or len(stdout)==1) : return "C"
         assert(len(stdout) == 2), stdout
         st = stdout[1].split()[4]
-        return st    
-        
+        return st
+
     def cancel(self, shell, job):
         #status = self.get_status(shell, job)
         (stdin, stdout, stderr) = shell.exec_command("{} {}".format(self.cancel_command, job.cluster_id))
