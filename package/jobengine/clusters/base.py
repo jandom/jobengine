@@ -26,7 +26,7 @@ class Cluster(object):
       
     def _rsync(self, verbose):
         verbose=True
-        return "/usr/bin/rsync --numeric-ids -e '{proxy} -T -c arcfour -o Compression=no -x' {verbose} {flags}".format(**{"proxy": ("ssh -q {} ssh".format(self.proxy) if self.proxy else "ssh -q"), 
+        return "/usr/bin/rsync --compress -e '{proxy}' {verbose} {flags}".format(**{"proxy": ("ssh -q {} ssh".format(self.proxy) if self.proxy else "ssh -q"), 
                                                                          "verbose": ('-v  --progress' if verbose else ''),
                                                                          "flags": config.rsync.flags,
                                                                          })
