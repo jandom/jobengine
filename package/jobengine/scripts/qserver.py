@@ -3,7 +3,7 @@ import fcntl
 import time
 # sqlalchemy
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine 
+from sqlalchemy import create_engine
 # jobengire
 from jobengine.core import Job
 from jobengine.clusters import Clusters
@@ -14,7 +14,7 @@ import argparse,  subprocess, os
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--action", default="resubmit")
-    parser.add_argument("--cluster", default="biowulf")
+    parser.add_argument("--clusters", nargs="*", default=["biowulf"])
     return parser.parse_args()
 
 def process_resubmit(args):
@@ -23,19 +23,19 @@ def process_resubmit(args):
     Session = sessionmaker(bind=engine)
     session = Session()
     clusters = Clusters()
-    
+
     if True:
         print("Checking")
         jobs = [job for job in session.query(Job).order_by(Job.id) if job.status != "S"]
         print("Found {} jobs to checkon".format(len(jobs)))
         for job in jobs :
             if job.status == "S": continue
-            if args.cluster and not job.cluster_name.lower().startswith(args.cluster): continue
-            print job            
+            if args.clusters and not job.cluster_name.lower() in args.clusters: continue
+            print job
             cluster, shell = clusters.get_cluster(job.cluster_name)
             if not shell: continue
             status = cluster.get_status(shell, job)
-            job.status = status 
+            job.status = status
             print("Before:",status, job.id)
             if os.path.exists("{}/confout.gro".format(job.local_workdir)):
                 job.status = "S"
@@ -53,25 +53,25 @@ def process_fetch(args):
     Session = sessionmaker(bind=engine)
     session = Session()
     clusters = Clusters()
-    
+
     if True:
         print("Fetching")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
 	print(dir(jobs[0]))
         for i, job in enumerate(jobs) :
-            if job.status == "S": continue	
-            if not job.cluster_name.lower().startswith(args.cluster): continue
+            if job.status == "S": continue
+            if not job.cluster_name.lower() in args.clusters: continue
             print(i+1, len(jobs), job)
             cluster, shell = clusters.get_cluster(job.cluster_name)
             if not shell: continue
-            rsync_return_code = cluster.pull(shell, job)   
+            rsync_return_code = cluster.pull(shell, job)
 
 def process_test(args):
-    
+
     engine = create_engine(engine_file)
     Session = sessionmaker(bind=engine)
     session = Session()
-    
+
     while True:
         print("Testing")
         jobs = [job for job in session.query(Job).order_by(Job.id)]
@@ -80,7 +80,7 @@ def process_test(args):
         break
         #time.sleep(60*60) # 60 minutes
 
-from multiprocessing import Process    
+from multiprocessing import Process
 
 def main():
     args = parse_args()
@@ -96,7 +96,7 @@ def main():
 
     fcntl.flock(x, fcntl.LOCK_UN)
     #Process(target=process_resubmit).start()
-    #Process(target=process_fetch).start()    
-    
+    #Process(target=process_fetch).start()
+
 if __name__ == '__main__':
-    main()    
+    main()

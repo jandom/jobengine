@@ -9,11 +9,13 @@ class PBSCluster(Cluster):
 
     def parse_qsub(self, stdout, stderr):
         lines = stderr.readlines()
+        print("stderr=", lines)
         assert(len(lines)==0)
+
         lines = stdout.readlines()
+        print("stdout=", lines)
         assert(len(lines)==1)
-        #print lines
-        print("stdout=", lines[0])
+
         cluster_id = int(lines[0].split(".")[0])
         return cluster_id
 

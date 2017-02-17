@@ -43,10 +43,10 @@ class Job(Base):
          self.target_chemtime = 0.01
          self.nodes = nodes
          self.partition = partition
-         
+
 
      def __repr__(self):
-        return "<Job '%s Cluster: %s'>\n\tId: %d Cluster Id: %d Status: %s UUID: %s\n\tWorkdir: %s\n\tRemote workdir: %s" % (self.name, self.cluster_name, 
+        return "<Job '%s Cluster: %s'>\n\tId: %d Cluster Id: %d Status: %s UUID: %s\n\tWorkdir: %s\n\tRemote workdir: %s" % (self.name, self.cluster_name,
                                                                                                                   self.id if self.id else 0,
                                                                                                                   self.cluster_id if self.cluster_id else 0 ,
                                                                                                                   self.status,
@@ -56,7 +56,7 @@ def get_job_from_workdir(session, workdir):
     uuid0 = os.path.basename(os.path.realpath(workdir))
     jobs = [job for job in session.query(Job).order_by(Job.id) if job.uuid == uuid0]
     assert(len(jobs) == 1)
-    job = jobs[0]    
+    job = jobs[0]
     return job
 
 def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1, processes=16, script=None, partition=None, ntasks_per_node=16):
@@ -65,18 +65,18 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
       - Argument validation
       - Copy from cwd to locker (on local machine)
       - Copy from local locker to remote locker
-      - Submit 
+      - Submit
 
     """
     if not os.path.exists(configuration.config.lockers): os.mkdir(configuration.config.lockers)
-    
+
     # Create workdir, copy files over there
     assert not os.path.exists("workdir")
     id0 = str(uuid.uuid4())
     workdir = "%s/%s" % (configuration.config.lockers, id0)
-    
+
     local_dir = os.getcwd()
-    ignore = shutil.ignore_patterns("\#*", "workdir*", "analysis*", "test*", "trash*")
+    ignore = shutil.ignore_patterns("#*", "workdir*", "analysis*", "test*", "trash*")
     print("local copy:", "src=", local_dir, "dst=", workdir)
     shutil.copytree(local_dir, workdir, symlinks=False, ignore=ignore)
     os.symlink(workdir, "workdir")
@@ -92,17 +92,16 @@ def create(tpr, cluster, shell, job_name="workdir", duration="24:00:00", nodes=1
         shutil.rmtree(workdir)
         os.remove("workdir")
         return None
-    
+
     remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
-    
+
     #if not partition: cluster.partitions[0]
 
     print("nodes=", nodes, "processes=",processes, "id=", id0, "partition=", partition)
 
-    cluster_id = 0 
+    cluster_id = 0
     job = Job(job_name, id0, workdir, local_dir, remote_workdir, cluster.name, cluster_id, nodes, partition)
 
-    
+
     job = cluster.submit(shell, job, nodes=nodes, duration=duration, partition=partition, ntasks_per_node=ntasks_per_node)
     return job
-        

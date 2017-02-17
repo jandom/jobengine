@@ -10,27 +10,28 @@ import argparse, os
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    #parser.add_argument("--workdir", "-w", default="workdir")
     parser.add_argument("--workdir", "-w", default=["workdir"], nargs="+")
+    parser.add_argument("--dry", "-d", action='store_true', help="Mark as cancelled in the database, but don't actually kill the job on the cluster")
     return parser.parse_args()
 
 def main():
     args = parse_args()
-    
+
     engine = create_engine(engine_file)
     Session = sessionmaker(bind=engine)
     session = Session()
-    clusters = Clusters()    
+    clusters = Clusters()
 
-    for workdir in args.workdir:    
-	job = get_job_from_workdir(session, workdir)
-	print job
-	cluster, shell = clusters.get_cluster(job.cluster_name)
-	print cluster, shell    
-	cluster.cancel(shell, job)
-	job.status = "S" # Stopped
-	session.add(job)
-    session.commit()
+    for workdir in args.workdir:
+    	job = get_job_from_workdir(session, workdir)
+    	print(job)
+        if not args.dry:
+            cluster, shell = clusters.get_cluster(job.cluster_name)
+            print(cluster, shell)
+            cluster.cancel(shell, job)
+    	job.status = "S" # Stopped
+    	session.add(job)
+        session.commit()
 
 if __name__ == "__main__":
     main()

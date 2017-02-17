@@ -12,7 +12,7 @@ class Archer(PBSCluster):
     def do_submit(self, shell, job, **kwargs):
 
         nodes = kwargs.get('nodes') if kwargs.get('nodes') else job.nodes
-        duration = kwargs.get('duration') if kwargs.get('duration') else '24:00:00'
+        duration = kwargs.get('duration') if kwargs.get('duration') else ('48:00:00' if job.partition == "long" else "24:00:00")
         jobname = kwargs.get('jobname') if kwargs.get('jobname') else job.name
         partition = kwargs.get('partition') if kwargs.get('partition') else job.partition
         print "nodes=", nodes
