@@ -1,5 +1,6 @@
 
 from slurmcluster import SlurmCluster
+import random
 
 class Biowulf2(SlurmCluster):
     name = "BIOWULF2"

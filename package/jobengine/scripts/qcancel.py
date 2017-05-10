@@ -23,8 +23,9 @@ def main():
     clusters = Clusters()
 
     for workdir in args.workdir:
+	print(workdir)
     	job = get_job_from_workdir(session, workdir)
-    	print(job)
+        if not job: continue
         if not args.dry:
             cluster, shell = clusters.get_cluster(job.cluster_name)
             print(cluster, shell)
