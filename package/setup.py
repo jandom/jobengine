@@ -10,16 +10,7 @@ import glob
 import shutil
 import tempfile
 
-#import spur, paramiko, scp, sqlalchemy
-
-# REQUIREMENTS
-# - spur
-# - paramiko
-# - gromacs wrapper
-# - mdanalysis
-# - sql alchemy	
-
-required = ['spur', 'paramiko', 'scp', 'sqlalchemy']
+required = ['paramiko', 'scp', 'sqlalchemy']
 
 if __name__ == '__main__':
 

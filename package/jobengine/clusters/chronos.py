@@ -1,11 +1,10 @@
-import spur
 from base import Cluster
 import paramiko
 from scp import SCPClient
 import jobengine.configuration
 from xml.dom import minidom
 from arcus import Arcus
-    
+
 class Chronos(Arcus):
     name = "arcus-chronos"
     hostname ="arcus.oerc.ox.ac.uk"

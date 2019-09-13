@@ -1,7 +1,8 @@
 
-import subprocess, os, spur, paramiko
+import subprocess, os, paramiko
 from jobengine.configuration import config
 
+print(paramiko)
 
 class Cluster(object):
     name = None
@@ -14,8 +15,8 @@ class Cluster(object):
 
     def do_submit(self, shell, job,  **kwargs):
         raise NotImplementedError
-                
-    def submit(self, shell, job, **kwargs):        
+
+    def submit(self, shell, job, **kwargs):
         """
             Returns a Job object
         """
@@ -23,26 +24,27 @@ class Cluster(object):
 
     def get_script(self, *args):
         return self.script % (args[0], args[2])
-      
+
     def _rsync(self, verbose):
         verbose=True
-        return "/usr/bin/rsync --numeric-ids -e '{proxy} -T -c arcfour -o Compression=no -x' {verbose} {flags}".format(**{"proxy": ("ssh -q {} ssh".format(self.proxy) if self.proxy else "ssh -q"), 
+        return "rsync {verbose} {flags}".format(**{"proxy": ("ssh -q {} ssh".format(self.proxy) if self.proxy else "ssh -q"),
                                                                          "verbose": ('-v  --progress' if verbose else ''),
                                                                          "flags": config.rsync.flags,
                                                                          })
-            
+
     def pull(self, shell, job, verbose=False):
         """
         Pull the data from remote workdir into the local workdir using the
         scp command.
         """
-        
+
         home = os.environ["HOME"]
+        hostname = self.storage_hostname if self.storage_hostname else self.hostname
         cmd = "%s %s@%s:%s/* /%s/.lockers/%s/ " \
-                             % (self._rsync(verbose), self.username, self.hostname, job.remote_workdir, home, job.uuid)
+                             % (self._rsync(verbose), self.username, hostname, job.remote_workdir, home, job.uuid)
         cmd += " --include='*.xtc' --include='*.trr' --include='*.gro' --include='*.mdp' --include='*.sh'  --include='*GRID*' --include='*HILLS*' --include='*COLVAR*' --include='*colvar*' --include='*.cpt' --include='*.dat'  --include='*.log' --include='*.ndx' --include='*.edr'  --include='*.qvt' --exclude='*.*' "
         print cmd
-        return subprocess.call(cmd, shell=True)    
+        return subprocess.call(cmd, shell=True)
 
     def push(self, shell, job, pattern=None, verbose=False):
         """
@@ -50,15 +52,15 @@ class Cluster(object):
         scp command.
         """
         #assert(pattern)
-        
+
         home = os.environ["HOME"]
         cmd = "%s ~/.lockers/%s/* %s@%s:~/.lockers/%s  " \
                              % (self._rsync(verbose), job.uuid, self.username, self.hostname, job.uuid)
         #cmd += " --include='*.xtc' --include='*.gro' --include='*HILLS*' --include='*COLVAR*' --include='*.dat'  --include='*.log' --include='*.ndx' --exclude='*.*' "
         if verbose: print(cmd)
         print cmd
-        return subprocess.call(cmd, shell=True)    
-    
+        return subprocess.call(cmd, shell=True)
+
     def delete(self, shell, job):
         cmd = "mv ~/.lockers/{} ~/.trash".format(job.uuid)
         print cmd
@@ -100,9 +102,9 @@ class Cluster(object):
 
         if host and 'proxycommand' in host:
             proxy = paramiko.ProxyCommand(host['proxycommand'])
-            ret = client.connect(host["hostname"], username=host["user"], pkey=pkey, sock=proxy, timeout=1000)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=rsa_key, sock=proxy, timeout=1000)
         else:
-            ret = client.connect(host["hostname"], username=host["user"], pkey=pkey, timeout=1000)
+            ret = client.connect(host["hostname"], username=host["user"], pkey=rsa_key, timeout=1000)
         return client
 
     def get_status_all(self, shell):

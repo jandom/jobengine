@@ -1,6 +1,4 @@
-
 from base import Cluster
-import spur
 
 class SlurmCluster(Cluster):
     status_command = "squeue --job"
