@@ -11,10 +11,10 @@ clusters = {
     "arcus-b": arcusb.ArcusB,
     "arcus": arcus.Arcus,
     "archer": archer.Archer,
-    }
+}
+
 
 class Clusters(object):
-
 
     def __init__(self):
         self._cache = {}
@@ -27,10 +27,10 @@ class Clusters(object):
         """
         cluster_name = cluster_name.lower()
         # check if we have the cluster in the cache already
-        if caching and self._cache.has_key(cluster_name):
+        if caching and cluster_name in self._cache:
             return self._cache[cluster_name]
         # check if we have the cluster at all
-        if not cluster_name in clusters:
+        if cluster_name not in clusters:
             return None, None
         cluster = clusters[cluster_name]
 

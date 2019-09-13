@@ -8,11 +8,11 @@ cluster = clusters.Clusters().clusters["arcus-gpu"]()
 print cluster
 
 if False:
-    
+
     ssh = SSHClient()
     ssh.load_system_host_keys()
     print cluster.hostname
-    ssh.connect(cluster.hostname, username=cluster.username)    
+    ssh.connect(cluster.hostname, username=cluster.username)
 
 if True:
     shell = cluster.connect()

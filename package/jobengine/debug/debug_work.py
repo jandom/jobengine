@@ -13,7 +13,11 @@ proxy = paramiko.ProxyCommand(host['proxycommand'])
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect("clathrin.bioch.ox.ac.uk", username="jdomanski", pkey=dsa_key, sock=proxy)
+client.connect(
+    "clathrin.bioch.ox.ac.uk",
+    username="jdomanski",
+    pkey=dsa_key,
+    sock=proxy)
 
 
 stdin, stdout, stderr = client.exec_command('ls ~')
