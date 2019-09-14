@@ -1,7 +1,20 @@
 jobengine
 =========
 
-Manage MD simulations across multiple computing clusters
+This package saved me *countless* hours during my PhD.
+jobengine allows you to automatically manage your jobs across multiple clusters.
+All from your workstation.
+
+
+Managing GROMACS jobs across multiple clusters is typically done by coping files back-and-forth from your workstation to the cluster.
+If you're a PhD in computational whatever, you know the drill: setup a job on your workstation, make sure it's working, copy over the data to the cluster.
+Done yet? Oh no! SSH into the cluster, submit the job, then baby-sit the job - lastly when the results are done, copy the data back over to your workstation for analysis and write-up.
+
+
+Can you believe it? It's all true - so how's jobengine different? You can copy and submit your job over to the cluster from your workstation.
+If you setup a CRON job, your data will be automatically pulled in, and any jobs automatically restarted.
+You still have to take care and make sure that the job is actually running.
+
 
 Installation
 ------------
