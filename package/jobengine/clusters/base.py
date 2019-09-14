@@ -4,9 +4,6 @@ import os
 import paramiko
 from jobengine.configuration import config
 
-print(paramiko)
-
-
 class Cluster(object):
     name = None
     hostname = None
