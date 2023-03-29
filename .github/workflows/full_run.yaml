@@ -1,0 +1,36 @@
+# This workflow will upload a Python Package using Twine when a release is created
+# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
+
+# This workflow cannot be called, as it calls out to other workflows.
+# You can use it as a model for your own repo.
+
+name: Run full workflow
+
+on:
+  push:
+    tags:
+      - "v*"
+    branches:
+      - main
+  pull_request: {}
+
+jobs:
+  lint:
+    uses: CHARM-Tx/python-ci/.github/workflows/lint.yml@v0.12.0
+    with:
+      python_versions: '["3.10"]'
+      flake8_plugins: flake8-simplify flake8-comprehensions flake8-bugbear darglint flake8-pep585 Flake8-pyproject
+
+  mypy:
+    uses: CHARM-Tx/python-ci/.github/workflows/mypy.yml@v0.12.0
+    with:
+      python_versions: '["3.10"]'
+      environment_file: ""
+    secrets: inherit
+
+  test:
+    uses: CHARM-Tx/python-ci/.github/workflows/test.yml@v0.12.0
+    with:
+      python_versions: '["3.10"]'
+      environment_file: ""
+    secrets: inherit
