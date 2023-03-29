@@ -22,14 +22,14 @@ jobs:
       flake8_plugins: flake8-simplify flake8-comprehensions flake8-bugbear darglint flake8-pep585 Flake8-pyproject
 
   mypy:
-    uses: CHARM-Tx/python-ci/.github/workflows/mypy.yml@v0.12.0
+    uses: ./.github/workflows/mypy.yml
     with:
       python_versions: '["3.10"]'
       environment_file: ""
     secrets: inherit
 
   test:
-    uses: CHARM-Tx/python-ci/.github/workflows/test.yml@v0.12.0
+    uses: ./.github/workflows/test.yml
     with:
       python_versions: '["3.10"]'
       environment_file: ""

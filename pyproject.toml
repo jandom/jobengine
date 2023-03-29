@@ -1,0 +1,48 @@
+[project]
+name = "jobengine"
+version = "1.0.0"
+
+dependencies = [
+    "cherrypy",
+    "numpy",
+    "paramiko",
+    "scp",
+    "spur",
+    "sqlalchemy",
+]
+
+[project.optional-dependencies]
+tests = [
+    "black",
+    "isort",
+    "mypy",
+    "pytest-cov",
+    "pytest",
+    "flake8",
+    "flake8-simplify",
+    "flake8-comprehensions",
+    "flake8-bugbear",
+    "darglint",
+    "flake8-pep585",
+    "Flake8-pyproject",
+    "types-paramiko",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+ignore = [
+    "E203",
+    "E402",
+    "E501",
+    "W503",
+    "W504",
+]
+
+[[tool.mypy.overrides]]
+module = "scp"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "--cov=jobengine"
