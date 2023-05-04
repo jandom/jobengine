@@ -1,5 +1,6 @@
 *.pyc
 *.*~
-package/build/*
-package/dist/*
+src/build/*
+src/dist/*
 *.egg*
+venv/
