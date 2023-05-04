@@ -6,25 +6,23 @@ Manage MD simulations across multiple computing clusters
 Installation
 ------------
 
-    git clone https://github.com/jandom/jobengine.git
-    cd jobengine/package
-    python setup.py
+    pip install git+https://github.com/jandom/jobengine.git
 
-Test
-----
+Sanity check
+------------
 
-    $ python -c "import jobengine; print jobengine"
-    <module 'jobengine' from 'jobengine/__init__.pyc'>
+    $ python -c "import jobengine; print(jobengine)"
+    <module 'jobengine' from '/private/tmp/test/venv/lib/python3.9/site-packages/jobengine/__init__.py'>
 
 Examples
 --------
 
-Submit a job, given a tpr
+Submit a job to a remote cluster, given a .tpr file in your current working directory
 
     qsubmit.py --cluster my_cluster --topol topol.tpr --nodes 16
     qsubmit.py --cluster my_cluster
 
-Fetch some results, manually
+Fetch some results from a remote cluster, manually
 
     qfetch.py
 
@@ -43,7 +41,7 @@ One can override the partition or node number used to inintialize the original j
     qsubmit.py --partion new_partition
     qsubmit.py --nodes 32
 
-Add to crontabe to re-submit broken jobs (every 30 mins) and fetch results (every 60 mins),
+Add to cron tab to re-submit broken jobs (every 30 mins) and fetch results (every 60 mins),
 
 Edit crontable using
 
@@ -62,18 +60,7 @@ Advanced
 Adding your own clusters
 ------------------------
 
-Create a new cluster file inside `package/jobengine/clusters/`, there is a number of clusters there from which you can start/inherit: PBSCluster, SLURMCluster.
-
-Create your cluster class along the existing ones and register the class in:
-
-    package/jobengine/clusters/__init__.py
-
-There are 3 main methods you'll have to inherit/implement:
-* `doSubmit(self, shell, job,  **kwargs)` runs the submit command on the remote machine, with any flags passed in kwargs, then return stdout and stderr as tuple
-* `submit(self, shell, job, **kwargs)` calls doSubmit, parses the output/error, checks on job status and returns the updated job object
-* `cancel(self, shell, job)` execute a cancel command on the remote host
-There is a bunch of other methods, see base.py for a full list.
-
+TODO
 
 Example ssh config file
 -----------------------
