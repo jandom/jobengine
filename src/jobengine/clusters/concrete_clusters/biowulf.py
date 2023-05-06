@@ -26,9 +26,6 @@ class Biowulf(PBSCluster):
     """
     Access to biowulf is much more contrived then others - we're using its definition
     from the ~/.ssh/config which includes a ProxyCommand
-
-    spur cannot support ProxyCommand, so lower-level paramiko is used.
-    The standard connect() method is overriden.
     """
 
     name = "BIOWULF"
