@@ -3,11 +3,8 @@ name = "jobengine"
 version = "1.0.0"
 
 dependencies = [
-    "cherrypy",
-    "numpy",
     "paramiko",
     "scp",
-    "spur",
     "sqlalchemy",
 ]
 
