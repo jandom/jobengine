@@ -41,6 +41,9 @@ One can override the partition or node number used to inintialize the original j
     qsubmit.py --partion new_partition
     qsubmit.py --nodes 32
 
+Background
+----------
+
 Add to cron tab to re-submit broken jobs (every 30 mins) and fetch results (every 60 mins),
 
 Edit crontable using
@@ -56,6 +59,17 @@ And add
 
 Advanced
 ========
+
+Architecture
+------------
+
+There are two types of thing in the codebase
+- Cluster entities, representing different HPC environments in use. One cluster can have multiple partitions
+- Job entities, one job can only belong to a single cluster but can be moved between partitions
+
+Clusters exist in two flavors
+- "abstract" clusters such as a PBSCluster or a SlurmCluster, one per queueing engine used in a cluster
+- "concrete" clusters such as Arcus, Biowulf and similar, which are actual existing clusters that you have access to.
 
 Adding your own clusters
 ------------------------
