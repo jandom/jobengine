@@ -43,13 +43,22 @@ class ClusterRegistry:
         return self._cache[cluster_name]
 
 
-cluster_registry = ClusterRegistry(
-    clusters={
+def create_production_cluster_types() -> dict[str, type[ConcreteClusters]]:
+    return {
         "biowulf": biowulf.Biowulf,
         "biowulf2": biowulf2.Biowulf2,
         "arcus-b": arcusb.ArcusB,
         "arcus": arcus.Arcus,
         "archer": archer.Archer,
+    }
+
+
+def create_test_cluster_types() -> dict[str, type[ConcreteClusters]]:
+    return {
         "localhost": localhost.Localhost,
-    },
+    }
+
+
+cluster_registry = ClusterRegistry(
+    clusters=create_production_cluster_types(),
 )
