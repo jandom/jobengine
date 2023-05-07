@@ -2,8 +2,8 @@ import hashlib
 import pathlib
 import shutil
 
-import jobengine.clusters.cluster_registry as cluster_registry
 from jobengine.job import Job
+from tests.integration.helpers import create_cluster_registry
 
 EXAMPLE_CLUSTER_NAMES = [
     "localhost",
@@ -28,8 +28,9 @@ def md5sum(filepath: str) -> str:
 
 
 def test_get_cluster():
+    cluster_registry = create_cluster_registry()
     for cluster_name in EXAMPLE_CLUSTER_NAMES:
-        cluster = cluster_registry.cluster_registry.get_cluster(cluster_name)
+        cluster = cluster_registry.get_cluster(cluster_name)
         shell = cluster.get_shell()
         shell.exec_command("echo 'hello world'")
 
@@ -51,8 +52,9 @@ def test_rsync_push(tmp_path_factory):
         local_workdir=str(source.parent.parent),
         remote_workdir=str(destination.parent.parent),
     )
+    cluster_registry = create_cluster_registry()
     for cluster_name in EXAMPLE_CLUSTER_NAMES:
-        cluster = cluster_registry.cluster_registry.get_cluster(cluster_name)
+        cluster = cluster_registry.get_cluster(cluster_name)
         import subprocess
 
         print(subprocess.check_output(["ls", "-l", str(source)]))

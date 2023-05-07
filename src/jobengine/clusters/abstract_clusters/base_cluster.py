@@ -5,8 +5,7 @@ from typing import Optional, Union
 
 import paramiko
 
-from jobengine import job
-from jobengine.configuration import config
+from jobengine import configuration, job
 from jobengine.status import Status
 
 
@@ -66,10 +65,11 @@ def generate_paramiko_ssh_client(*, hostname: str) -> paramiko.SSHClient:
 def generate_rsync_command(*, proxy: Optional[str], verbose: bool = True) -> str:
     verbose_flags = "-v --progress" if verbose else "-v"
     proxy = "ssh -q {proxy} ssh".format(proxy=proxy) if proxy else "ssh -q"
+    config = configuration.create_configuration()
     cmd = "/usr/bin/rsync --compress -e {proxy} {verbose_flags} {flags}".format(
         proxy=proxy,
         verbose_flags=verbose_flags,
-        flags=config.rsync.flags,
+        flags=config.rsync_flags,
     )
     return cmd
 
@@ -81,6 +81,7 @@ class BaseCluster:
     proxy: Optional[str] = None
     shell: Optional[paramiko.SSHClient] = None
     path: str
+    configuration: configuration.Configuration
 
     def __repr__(self):
         return "<Cluster '%s' %s@%s:%s>" % (

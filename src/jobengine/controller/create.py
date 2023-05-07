@@ -20,13 +20,12 @@ def create_job(
     partition=None,
     ntasks_per_node=16,
 ) -> job.Job:
-    if not os.path.exists(configuration.config.lockers):
-        os.mkdir(configuration.config.lockers)
+    config = configuration.create_configuration()
 
     # Create workdir, copy files over there
     assert not os.path.exists("workdir")
     id0 = str(uuid.uuid4())
-    workdir = "%s/%s" % (configuration.config.lockers, id0)
+    workdir = "%s/%s" % (config.lockers_directory, id0)
 
     local_dir = os.getcwd()
     ignore = shutil.ignore_patterns("#*", "workdir*", "analysis*", "test*", "trash*")
