@@ -9,8 +9,6 @@ from jobengine.clusters.abstract_clusters.base_cluster import BaseCluster as Clu
 
 
 def create_job(
-    tpr,
-    /,
     *,
     cluster: Cluster,
     job_name="workdir",

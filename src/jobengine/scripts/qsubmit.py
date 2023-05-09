@@ -62,12 +62,9 @@ def resubmit_workdir(
     session.commit()
 
 
-def create_workdir(
-    *, args: argparse.Namespace, session: session.Session, workdir: str
-) -> None:
+def create_workdir(*, args: argparse.Namespace, session: session.Session) -> None:
     cluster = cluster_registry.get_cluster(args.cluster)
     job = create_job(
-        workdir=workdir,
         cluster=cluster,
         job_name=args.jobname,
         duration=args.duration,
@@ -97,10 +94,10 @@ def main() -> None:
         # Re-submit existing workdirs
         if len(args.workdir) > 0:
             for workdir in args.workdir:
-                resubmit_workdir(args, session, workdir)
+                resubmit_workdir(args=args, session=session, workdir=workdir)
         # Create a brand-new workdir
         else:
-            create_workdir(args, session, workdir)
+            create_workdir(args=args, session=session)
 
 
 if __name__ == "__main__":
