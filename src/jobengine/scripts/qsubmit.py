@@ -67,11 +67,9 @@ def create_workdir(*, args: argparse.Namespace, session: session.Session) -> Non
     job = create_job(
         cluster=cluster,
         job_name=args.jobname,
-        duration=args.duration,
         nodes=args.nodes,
         processes=args.processes,
         partition=args.partition,
-        ntasks_per_node=args.ntasks_per_node,
     )
     assert job
     status = cluster.get_status(job)
