@@ -10,7 +10,7 @@ from jobengine.controller import create
 
 def main():
     cluster = biowulf2.Biowulf2()
-    stdout, _ = cluster.run_shell_command(["echo", "-n", "hello"])
+    stdout, _ = cluster.run_shell_command("echo -n hello")
 
     logging.info(stdout)
 

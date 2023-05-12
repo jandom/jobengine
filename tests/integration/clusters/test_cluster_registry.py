@@ -31,7 +31,7 @@ def test_get_cluster():
     cluster_registry = create_cluster_registry()
     for cluster_name in EXAMPLE_CLUSTER_NAMES:
         cluster = cluster_registry.get_cluster(cluster_name)
-        cluster.run_shell_command("echo 'hello world'")
+        cluster.run_shell_command("echo -n hello")
 
 
 def test_rsync_push(tmp_path_factory):

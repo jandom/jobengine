@@ -8,7 +8,7 @@ from tests.integration.helpers import create_cluster_registry
 def test_run_shell_command():
     cluster_registry = create_cluster_registry()
     cluster = cluster_registry.get_cluster("localhost")
-    stdout, _ = cluster.run_shell_command("ls ~")
+    stdout, _ = cluster.run_shell_command("echo -n hello")
 
     assert len(stdout.readlines()) > 0
 
