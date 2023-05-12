@@ -5,11 +5,11 @@ from scp import SCPClient
 from tests.integration.helpers import create_cluster_registry
 
 
-def test_exec_command():
+def test_run_shell_command():
     cluster_registry = create_cluster_registry()
     cluster = cluster_registry.get_cluster("localhost")
-    shell = cluster.get_shell()
-    (_, stdout, stderr) = shell.exec_command("ls ~")
+    stdout, _ = cluster.run_shell_command("ls ~")
+
     assert len(stdout.readlines()) > 0
 
 

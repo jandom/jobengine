@@ -10,9 +10,9 @@ from jobengine.controller import create
 
 def main():
     cluster = biowulf2.Biowulf2()
-    shell = cluster.get_shell()
-    result = shell.exec_command(["echo", "-n", "hello"])
-    logging.info(result)
+    stdout, _ = cluster.run_shell_command(["echo", "-n", "hello"])
+
+    logging.info(stdout)
 
     config = create_configuration()
     engine = create_engine(config.engine_file)
