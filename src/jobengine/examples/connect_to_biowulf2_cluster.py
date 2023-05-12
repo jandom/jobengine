@@ -9,13 +9,12 @@ from jobengine.controller import create
 
 
 def main():
-    config = create_configuration()
-
     cluster = biowulf2.Biowulf2()
     shell = cluster.get_shell()
     result = shell.exec_command(["echo", "-n", "hello"])
-    print(result)
+    logging.info(result)
 
+    config = create_configuration()
     engine = create_engine(config.engine_file)
     Session = sessionmaker(bind=engine)
     with Session() as session:
