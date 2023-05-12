@@ -1,3 +1,4 @@
+import logging
 import time
 
 from sqlalchemy import create_engine
@@ -7,9 +8,8 @@ from sqlalchemy.orm import sessionmaker
 
 from jobengine.clusters.concrete_clusters import biowulf2
 from jobengine.configuration import create_configuration
-
-# jobengire
 from jobengine.job import Job
+from jobengine.status import Status
 
 
 def main():
@@ -21,20 +21,19 @@ def main():
         shell = cluster.connect()
 
         while True:
-            print("Checking...")
+            logging.info("Checking...")
             for job in session.query(Job).order_by(Job.id):
-                print(job)
+                logging.info(f"Found {job=}")
                 status = cluster.get_status(job)
                 job.status = status
-                print((status, job.id))
-                if status == "C":
+                logging.info(f"{status=} {job.id=}")
+                if status == Status.Cancelled:
                     job = cluster.submit(shell, job)
-                    print((job.status, job.id))
+                    logging.info(job.status, job.id)
                 session.add(job)
                 session.commit()
                 cluster.pull(shell, job)
-                print((job.status, job.id, job.workdir))
-            # break
+                logging.info((job.status, job.id, job.workdir))
             time.sleep(5)
 
 
