@@ -18,7 +18,6 @@ def main():
     Session = sessionmaker(bind=engine)
     with Session() as session:
         cluster = biowulf2.Biowulf2()
-        shell = cluster.connect()
 
         while True:
             logging.info("Checking...")
@@ -28,11 +27,11 @@ def main():
                 job.status = status
                 logging.info(f"{status=} {job.id=}")
                 if status == Status.Cancelled:
-                    job = cluster.submit(shell, job)
+                    job = cluster.submit(job)
                     logging.info(job.status, job.id)
                 session.add(job)
                 session.commit()
-                cluster.pull(shell, job)
+                cluster.pull(job)
                 logging.info((job.status, job.id, job.workdir))
             time.sleep(5)
 
