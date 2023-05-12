@@ -17,7 +17,7 @@ from jobengine.status import Status
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("-j", "--jobname")
+    parser.add_argument("-j", "--job_name")
     parser.add_argument("-c", "--cluster")
     parser.add_argument("-p", "--partition")
 
@@ -66,7 +66,7 @@ def create_workdir(*, args: argparse.Namespace, session: session.Session) -> Non
     cluster = cluster_registry.get_cluster(args.cluster)
     job = create_job(
         cluster=cluster,
-        job_name=args.jobname,
+        job_name=args.job_name,
         nodes=args.nodes,
         processes=args.processes,
         partition=args.partition,

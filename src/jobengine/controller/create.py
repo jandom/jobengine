@@ -22,7 +22,7 @@ def create_local_workdir(
     return workdir_directory
 
 
-def copy_local_workdir_to_remote(*, cluster: Cluster, id0: str, local_workdir: str):
+def copy_local_workdir_to_remote(*, cluster: Cluster, local_workdir: str):
     dst = "%s/.lockers/" % (cluster.path)
     logging.info(f"remote copy: src={local_workdir} dst={cluster.name}")
     scp = SCPClient(cluster.get_shell().get_transport(), socket_timeout=600)
