@@ -3,4 +3,7 @@
 src/build/*
 src/dist/*
 *.egg*
-venv/
+venv*/
+build/
+.coverage
+coverage.xml

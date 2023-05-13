@@ -10,7 +10,7 @@ def test_run_shell_command():
     cluster = cluster_registry.get_cluster("localhost")
     stdout, _ = cluster.run_shell_command("echo -n hello")
 
-    assert len(stdout.readlines()) > 0
+    assert len(stdout) > 0
 
 
 def test_scp_put():
