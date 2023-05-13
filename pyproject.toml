@@ -43,3 +43,13 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 addopts = "--cov=jobengine"
+
+[project.scripts]
+qcancel = "jobengine.scripts.qcancel:main"
+qcleanup = "jobengine.scripts.qcleanup:main"
+qdelete = "jobengine.scripts.qdelete:main"
+qfetch = "jobengine.scripts.qfetch:main"
+qinfo = "jobengine.scripts.qinfo:main"
+qpush = "jobengine.scripts.qpush:main"
+qserver = "jobengine.scripts.qserver:main"
+qsubmit = "jobengine.scripts.qsubmit:main"

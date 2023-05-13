@@ -8,6 +8,7 @@ from jobengine.clusters.concrete_clusters import (
     biowulf2,
     localhost,
 )
+from jobengine.configuration import Configuration, create_configuration
 
 ConcreteClusters = Union[
     biowulf.Biowulf,
@@ -22,10 +23,17 @@ ConcreteClusters = Union[
 class ClusterRegistry:
     _cache: dict[str, ConcreteClusters]
     clusters: dict[str, type[ConcreteClusters]]
+    configuration: Configuration
 
-    def __init__(self, clusters: dict[str, type[ConcreteClusters]]):
+    def __init__(
+        self,
+        *,
+        clusters: dict[str, type[ConcreteClusters]],
+        configuration: Configuration,
+    ):
         self._cache = {}
         self.clusters = clusters
+        self.configuration = configuration
 
     def get_cluster(self, cluster_name: str, /) -> ConcreteClusters:
         cluster_name = cluster_name.lower()
@@ -43,13 +51,23 @@ class ClusterRegistry:
         return self._cache[cluster_name]
 
 
-cluster_registry = ClusterRegistry(
-    clusters={
+def create_production_cluster_types() -> dict[str, type[ConcreteClusters]]:
+    return {
         "biowulf": biowulf.Biowulf,
         "biowulf2": biowulf2.Biowulf2,
         "arcus-b": arcusb.ArcusB,
         "arcus": arcus.Arcus,
         "archer": archer.Archer,
+    }
+
+
+def create_test_cluster_types() -> dict[str, type[ConcreteClusters]]:
+    return {
         "localhost": localhost.Localhost,
-    },
+    }
+
+
+cluster_registry = ClusterRegistry(
+    configuration=create_configuration(),
+    clusters=create_production_cluster_types(),
 )

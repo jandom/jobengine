@@ -7,7 +7,7 @@ from jobengine import job
 from jobengine.clusters.abstract_clusters.slurm_cluster import SlurmCluster
 
 
-def generate_flags(partition: str, /):
+def generate_flags(partition: str, /) -> str:
     constraint = (
         "--constraint=x2695"
         if random.random() > 5989.0 / (5989 + 23632)

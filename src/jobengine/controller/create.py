@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import uuid
@@ -7,71 +8,63 @@ from scp import SCPClient, SCPException
 from jobengine import configuration, job
 from jobengine.clusters.abstract_clusters.base_cluster import BaseCluster as Cluster
 
+ignore = shutil.ignore_patterns("#*", "workdir*", "analysis*", "test*", "trash*")
 
-def create_job(
-    tpr,
-    /,
-    *,
-    cluster: Cluster,
-    job_name="workdir",
-    duration="24:00:00",
-    nodes=1,
-    processes=16,
-    partition=None,
-    ntasks_per_node=16,
-) -> job.Job:
-    if not os.path.exists(configuration.config.lockers):
-        os.mkdir(configuration.config.lockers)
 
-    # Create workdir, copy files over there
+def create_local_workdir(
+    *, lockers_directory: str, local_dir: str, identifier: str
+) -> str:
     assert not os.path.exists("workdir")
-    id0 = str(uuid.uuid4())
-    workdir = "%s/%s" % (configuration.config.lockers, id0)
+    workdir_directory = "%s/%s" % (lockers_directory, identifier)
+    logging.info(f"local copy src={local_dir} dst={workdir_directory}")
+    shutil.copytree(local_dir, workdir_directory, symlinks=False, ignore=ignore)
+    os.symlink(workdir_directory, "workdir")
+    return workdir_directory
 
-    local_dir = os.getcwd()
-    ignore = shutil.ignore_patterns("#*", "workdir*", "analysis*", "test*", "trash*")
-    print(("local copy:", "src=", local_dir, "dst=", workdir))
-    shutil.copytree(local_dir, workdir, symlinks=False, ignore=ignore)
-    os.symlink(workdir, "workdir")
 
-    # Setup SSH client to copy files over via scp
+def copy_local_workdir_to_remote(*, cluster: Cluster, local_workdir: str):
     dst = "%s/.lockers/" % (cluster.path)
-    print(
-        (
-            "remote copy:",
-            "src=",
-            workdir,
-            "dst=",
-            cluster.name,
-            ":",
-        )
-    )
+    logging.info(f"remote copy: src={local_workdir} dst={cluster.name}")
     scp = SCPClient(cluster.get_shell().get_transport(), socket_timeout=600)
     try:
-        scp.put(workdir, dst, recursive=True)
+        scp.put(local_workdir, dst, recursive=True)
     except SCPException as e:
-        print(("SCPException", e))
-        shutil.rmtree(workdir)
+        logging.error(f"SCPException {e=}")
+        shutil.rmtree(local_workdir)
         os.remove("workdir")
         raise e
 
-    remote_workdir = "%s/.lockers/%s" % (cluster.path, id0)
 
-    # if not partition: cluster.partitions[0]
+def create_job(
+    *,
+    cluster: Cluster,
+    job_name: str = "workdir",
+    nodes: int = 1,
+    processes: int = 16,
+    partition: str,
+) -> job.Job:
+    config = configuration.create_configuration()
+    identifier = str(uuid.uuid4())
+    local_dir = os.getcwd()
 
-    print(
-        ("nodes=", nodes, "processes=", processes, "id=", id0, "partition=", partition)
+    local_workdir = create_local_workdir(
+        lockers_directory=config.lockers_directory,
+        identifier=identifier,
+        local_dir=local_dir,
     )
 
-    cluster_id = 0
+    copy_local_workdir_to_remote(cluster=cluster, local_workdir=local_workdir)
+
+    logging.info(f"{nodes=} {processes=} {identifier=} {partition=}")
+
     return job.Job(
         name=job_name,
-        uuid=id0,
-        workdir=workdir,
+        uuid=identifier,
+        workdir=local_workdir,
         local_workdir=local_dir,
-        remote_workdir=remote_workdir,
+        remote_workdir="%s/.lockers/%s" % (cluster.path, identifier),
         cluster_name=cluster.name,
-        cluster_id=cluster_id,
+        cluster_id=0,
         nodes=nodes,
         partition=partition,
     )
