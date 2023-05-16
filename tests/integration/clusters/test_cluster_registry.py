@@ -2,7 +2,7 @@ import hashlib
 import pathlib
 import shutil
 
-from jobengine.job import Job
+from jobengine.model.job import Job
 from tests.integration.helpers import create_cluster_registry
 
 EXAMPLE_CLUSTER_NAMES = [

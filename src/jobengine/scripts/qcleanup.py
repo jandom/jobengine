@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from jobengine.configuration import create_configuration
-from jobengine.job import Job
+from jobengine.model.job import Job
 from jobengine.status import Status
 
 

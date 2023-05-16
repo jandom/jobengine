@@ -2,7 +2,7 @@ import os
 
 from sqlalchemy.orm import Session
 
-from jobengine.job import Job
+from jobengine.model.job import Job
 
 
 def get_job_from_workdir(*, session: Session, workdir: str) -> Job:

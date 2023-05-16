@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from jobengine.clusters.cluster_registry import cluster_registry
 from jobengine.configuration import create_configuration
-from jobengine.job import Job
+from jobengine.model.job import Job
 from jobengine.status import Status
 
 

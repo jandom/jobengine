@@ -2,8 +2,8 @@ import logging
 
 import paramiko
 
-from jobengine import job
 from jobengine.clusters.abstract_clusters.slurm_cluster import SlurmCluster
+from jobengine.model import job
 
 
 class ArcusB(SlurmCluster):

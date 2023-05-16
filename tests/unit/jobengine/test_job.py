@@ -1,6 +1,6 @@
 import uuid
 
-from jobengine.job import Job
+from jobengine.model.job import Job
 from jobengine.status import Status
 
 

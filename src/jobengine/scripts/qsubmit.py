@@ -11,7 +11,7 @@ from jobengine.clusters.cluster_registry import cluster_registry
 from jobengine.configuration import create_configuration
 from jobengine.controller.create import create_job
 from jobengine.controller.get import get_job_from_workdir
-from jobengine.job import Job
+from jobengine.model.job import Job
 from jobengine.status import Status
 
 

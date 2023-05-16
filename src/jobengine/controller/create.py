@@ -5,8 +5,9 @@ import uuid
 
 from scp import SCPClient, SCPException
 
-from jobengine import configuration, job
+from jobengine import configuration
 from jobengine.clusters.abstract_clusters.base_cluster import BaseCluster as Cluster
+from jobengine.model import job
 
 ignore = shutil.ignore_patterns("#*", "workdir*", "analysis*", "test*", "trash*")
 
@@ -38,10 +39,10 @@ def copy_local_workdir_to_remote(*, cluster: Cluster, local_workdir: str):
 def create_job(
     *,
     cluster: Cluster,
+    partition: str,
     job_name: str = "workdir",
     nodes: int = 1,
     processes: int = 16,
-    partition: str,
 ) -> job.Job:
     config = configuration.create_configuration()
     identifier = str(uuid.uuid4())

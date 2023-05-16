@@ -1,7 +1,7 @@
 import logging
 
-from jobengine import job
 from jobengine.clusters.abstract_clusters.base_cluster import BaseCluster
+from jobengine.model import job
 from jobengine.status import Status
 
 

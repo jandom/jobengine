@@ -7,3 +7,4 @@ venv*/
 build/
 .coverage
 coverage.xml
+docker/my-slurm-docker

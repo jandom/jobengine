@@ -40,5 +40,5 @@ def test_generate_rsync_command():
     cmd = base_cluster.generate_rsync_command(proxy="jump-host-hostname", verbose=True)
     assert (
         cmd
-        == "/usr/bin/rsync --compress -e ssh -q jump-host-hostname ssh -v --progress -a"
+        == "/usr/bin/rsync --compress -e ssh -q jump-host-hostname ssh -v --progress -a --compress"
     )

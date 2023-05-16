@@ -2,8 +2,8 @@ import logging
 
 import paramiko
 
-from jobengine import job
 from jobengine.clusters.abstract_clusters.pbs_cluster import PBSCluster
+from jobengine.model import job
 
 
 class Arcus(PBSCluster):

@@ -3,8 +3,8 @@ import random
 
 import paramiko
 
-from jobengine import job
 from jobengine.clusters.abstract_clusters.slurm_cluster import SlurmCluster
+from jobengine.model import job
 
 
 def generate_flags(partition: str, /) -> str:

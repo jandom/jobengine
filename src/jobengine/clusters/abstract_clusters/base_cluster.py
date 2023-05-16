@@ -5,7 +5,8 @@ from typing import Optional, Union
 
 import paramiko
 
-from jobengine import configuration, job
+from jobengine import configuration
+from jobengine.model import job
 from jobengine.status import Status
 
 
