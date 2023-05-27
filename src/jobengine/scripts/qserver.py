@@ -4,13 +4,11 @@ import fcntl
 import logging
 import os
 
-from sqlalchemy import create_engine
-
 # sqlalchemy
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
 from jobengine.clusters.cluster_registry import cluster_registry
-from jobengine.configuration import create_configuration
+from jobengine.configuration import create_session
 from jobengine.model.job import Job
 from jobengine.status import Status
 
@@ -66,10 +64,7 @@ def main():
     with open("/tmp/qserver.lock", "w+") as x:
         fcntl.flock(x, fcntl.LOCK_EX | fcntl.LOCK_NB)
 
-        config = create_configuration()
-        engine = create_engine(config.engine_file)
-        Session = sessionmaker(bind=engine)
-        with Session() as session:
+        with create_session() as session:
             if args.action == "resubmit":
                 process_resubmit(session, args)
             if args.action == "fetch":

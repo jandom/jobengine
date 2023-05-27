@@ -1,10 +1,7 @@
 import logging
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from jobengine.clusters.cluster_registry import biowulf2
-from jobengine.configuration import create_configuration
+from jobengine.configuration import create_session
 from jobengine.controller import create
 
 
@@ -14,10 +11,7 @@ def main():
 
     logging.info(stdout)
 
-    config = create_configuration()
-    engine = create_engine(config.engine_file)
-    Session = sessionmaker(bind=engine)
-    with Session() as session:
+    with create_session() as session:
         job = create.create("topol.tpr", cluster)
         logging.info(job)
 

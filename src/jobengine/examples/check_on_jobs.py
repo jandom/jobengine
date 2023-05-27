@@ -1,22 +1,14 @@
 import logging
 import time
 
-from sqlalchemy import create_engine
-
-# sqlalchemy
-from sqlalchemy.orm import sessionmaker
-
 from jobengine.clusters.concrete_clusters import biowulf2
-from jobengine.configuration import create_configuration
+from jobengine.configuration import create_session
 from jobengine.model.job import Job
 from jobengine.status import Status
 
 
 def main():
-    config = create_configuration()
-    engine = create_engine(config.engine_file)
-    Session = sessionmaker(bind=engine)
-    with Session() as session:
+    with create_session() as session:
         cluster = biowulf2.Biowulf2()
 
         while True:
