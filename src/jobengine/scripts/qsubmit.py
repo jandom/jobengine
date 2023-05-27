@@ -4,14 +4,12 @@ import argparse
 import logging
 import os
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import session, sessionmaker
+from sqlalchemy import session
 
 from jobengine.clusters.cluster_registry import cluster_registry
-from jobengine.configuration import create_configuration
+from jobengine.configuration import create_session
 from jobengine.controller.create import create_job
 from jobengine.controller.get import get_job_from_workdir
-from jobengine.model.job import Job
 from jobengine.status import Status
 
 
@@ -83,12 +81,7 @@ def create_workdir(*, args: argparse.Namespace, session: session.Session) -> Non
 def main() -> None:
     args = parse_args()
 
-    config = create_configuration()
-    engine = create_engine(config.engine_file)
-    Job.metadata.create_all(engine)
-
-    Session = sessionmaker(bind=engine)
-    with Session() as session:
+    with create_session() as session:
         # Re-submit existing workdirs
         if len(args.workdir) > 0:
             for workdir in args.workdir:

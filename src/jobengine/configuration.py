@@ -3,7 +3,8 @@ import pathlib
 from dataclasses import dataclass
 from typing import Optional
 
-from sqlalchemy import create_engine
+import sqlalchemy
+from sqlalchemy.orm import sessionmaker
 
 from jobengine.model.job import Job
 
@@ -15,7 +16,7 @@ class Configuration:
     rsync_flags: str
 
 
-def make_configuration(
+def _make_configuration(
     path: Optional[pathlib.Path] = None, rsync_flags: str = "-a --compress"
 ) -> Configuration:
     if not path:
@@ -33,12 +34,19 @@ def make_configuration(
 
 
 def create_configuration(path: Optional[pathlib.Path] = None) -> Configuration:
-    config = make_configuration(path=path)
-    initialize_database(config=config)
+    config = _make_configuration(path=path)
+    _initialize_database(config=config)
     return config
 
 
-def initialize_database(config: Configuration):
+def _initialize_database(config: Configuration):
     if not pathlib.Path(config.engine_file).exists():
-        engine = create_engine(config.engine_file)
+        engine = sqlalchemy.create_engine(config.engine_file)
         Job.metadata.create_all(engine)
+
+
+def create_session():
+    config = create_configuration()
+    engine = sqlalchemy.create_engine(config.engine_file)
+    Session = sessionmaker(bind=engine)
+    return Session()
