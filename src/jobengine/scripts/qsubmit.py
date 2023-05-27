@@ -4,7 +4,7 @@ import argparse
 import logging
 import os
 
-from sqlalchemy import session
+from sqlalchemy.orm import session
 
 from jobengine.clusters.cluster_registry import cluster_registry
 from jobengine.configuration import create_session
